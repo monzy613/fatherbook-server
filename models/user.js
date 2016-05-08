@@ -14,13 +14,12 @@ var user_info = new mongoose.Schema ({
     _id: {type: String},
     phone: {type: String},
     email: {type: String},
-    nickname: {type: String},
-    isOnline: {type: Boolean}
+    nickname: {type: String}
 });
 
 var user_blog = new mongoose.Schema ({
     _id: {type: String},
-    blog: {type: String}
+    blogs: {type: Array}
 });
 
 var user_friend = new mongoose.Schema ({
@@ -52,12 +51,12 @@ var user_notification = new mongoose.Schema ({
 });
 //schemas end
 
-module.exports = [
-  mongoose.model('user_login', user_login),
-  mongoose.model('user_info', user_info),
-  mongoose.model('user_blog', user_blog),
-  mongoose.model('user_friend', user_friend),
-  mongoose.model('user_apply', user_apply),
-  mongoose.model('user_gallery', user_gallery),
-  mongoose.model('user_position', user_position)
-];
+module.exports = {
+    user_login: mongoose.model('user_login', user_login),
+    user_info: mongoose.model('user_info', user_info),
+    user_blog: mongoose.model('user_blog', user_blog),
+    user_friend: mongoose.model('user_friend', user_friend),
+    user_apply: mongoose.model('user_apply', user_apply),
+    user_gallery: mongoose.model('user_gallery', user_gallery),
+    user_position: mongoose.model('user_position', user_position)
+}
