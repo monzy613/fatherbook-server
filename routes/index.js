@@ -3,9 +3,10 @@ var express = require("express")
 var mongoose = require("mongoose")
 var router = express.Router()
 var swig = require("swig")
+var fs = require('fs')
+var rongcloudSDK = require( 'rongcloud-sdk' );
 
 //db
-var fs = require('fs')
 var config = JSON.parse(fs.readFileSync('./config.json','utf-8'))
 var db = mongoose.connect(config.mongodbURL)
 db.connection.on("error", function(err) {
@@ -14,6 +15,10 @@ db.connection.on("error", function(err) {
 db.connection.on('open', function() {
     console.log('db connect success')
 })
+
+
+//rc
+rongcloudSDK.init(config.rcAppkey, config.rcAppSecret);
 
 // doc modals
 var models = require("../models/user")
@@ -30,6 +35,10 @@ var statusCodeDictionary = {
     "340": ["注册成功", true],
     "350": ["注册失败", false],
     "370": ["帐号已存在", false],
+}
+
+String.prototype.isEmpty = function() {
+    return this === undefined || this.trim() === ""
 }
 
 /* GET home page. */
@@ -56,8 +65,11 @@ router.route("/login").get(function (req, res) {
 
 /* App api */
 router.post("/app.register", function (req, res, next) {
-    var account = req.body.account
-    var password = req.body.password
+    var account = req.body.account.toString()
+    var password = req.body.password.toString()
+    if (account.isEmpty() || password.isEmpty()) {
+        return
+    }
     console.log("Register -- account: " + account + ", password: " + password)
     models.user_login.find({'_id': account}, function(err, docs) {
         if (err) {
@@ -107,8 +119,11 @@ router.post("/app.register", function (req, res, next) {
 })
 
 router.post("/app.login", function (req, res, next) {
-    var account = req.body.account
-    var password = req.body.password
+    var account = req.body.account.toString()
+    var password = req.body.password.toString()
+    if (account.isEmpty() || password.isEmpty()) {
+        return
+    }
     console.log("login account: " + account + ", password: " + password)
     models.user_login.find({'_id': account, 'password': password}, function(err, docs) {
         if (err) {
@@ -125,20 +140,41 @@ router.post("/app.login", function (req, res, next) {
                 // user find
                 console.log("user find")
                 var userInfo = {
-
+                    "account": account
                 }
                 models.user_info.find({"_id": account}, function(err, docs) {
                     if (docs.length !== 0) {
                         userInfo = {
+                            "account": account,
                             "phone": docs[0]["phone"],
                             "email": docs[0]["email"],
                             "nickname": docs[0]["nickname"]
                         }
                     }
-                    res.send({
-                        "status": "200",
-                        "userInfo": userInfo
-                    })
+
+                    rongcloudSDK.user.getToken(
+                        account,
+                        docs[0]["nickname"] === undefined? "defaultNickname": docs[0]["nickname"],
+                        "http://www.rongcloud.cn/docs/assets/img/logo_s@2x.png",
+                        function(err, resultText) {
+                            if( err ) {
+                                // Handle the error
+                                console.log(err)
+                            }
+                            else {
+                                var result = JSON.parse(resultText);
+                                if( result.code === 200 ) {
+                                    //Handle the result.token
+                                    userInfo.rcToken = result.token
+                                    res.send({
+                                        "status": "200",
+                                        "userInfo": userInfo
+                                    })
+                                } else {
+                                    console.log("result.code not 200")
+                                }
+                            }
+                         });
                 })
             }
         }
@@ -150,4 +186,5 @@ function status(code) {
         "status": code.toString()
     }
 }
+
 module.exports = router
