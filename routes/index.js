@@ -16,7 +16,6 @@ db.connection.on('open', function() {
     console.log('db connect success')
 })
 
-
 //rc
 rongcloudSDK.init(config.rcAppkey, config.rcAppSecret);
 
@@ -25,16 +24,21 @@ var models = require("../models/user")
 
 // status dictionary
 var statusCodeDictionary = {
-    "200": ["登陆成功", true],
-    "210": ["账号不存在或密码不正确", false],
-    "230": ["登陆失败", false],
-    "300": ["验证码已发送", true],
-    "310": ["手机号已被注册", false],
-    "320": ["验证码正确", true],
-    "330": ["验证码不正确", false],
-    "340": ["注册成功", true],
-    "350": ["注册失败", false],
-    "370": ["帐号已存在", false],
+    "000": ("Network error", false),
+    "200": ("Login Success", true),
+    "210": ("Wrong password or account", false),
+
+    "300": ("验证码已发送", true),
+    "310": ("手机号已被注册", false),
+    "320": ("验证码正确", true),
+    "330": ("验证码不正确", false),
+
+    "340": ("Register success", true),
+    "350": ("Register failed", false),
+    "370": ("Account exist", false),
+
+    "400": ("搜索成功", true),
+    "410": ("未找到符合条件的用户", false)
 }
 
 String.prototype.isEmpty = function() {
@@ -177,6 +181,25 @@ router.post("/app.login", function (req, res, next) {
                          });
                 })
             }
+        }
+    })
+})
+
+router.post("/app.search.account", function (req, res, next) {
+    //app.search.account by acount
+    var account = req.body.account.toString()
+    models.user_info.find({'_id': new RegExp(account, "i")}, function(err, docs) {
+        if (err) {
+            console.log("/app.search.account error: " + err)
+        } else if (docs.length === 0) {
+            res.send({
+                "status": "410"
+            })
+        } else {
+            res.send({
+                "status": "400",
+                "users": docs
+            })
         }
     })
 })
