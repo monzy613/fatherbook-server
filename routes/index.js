@@ -4,15 +4,15 @@ var mongoose = require("mongoose")
 var router = express.Router()
 var swig = require("swig")
 var fs = require('fs')
-var rongcloudSDK = require( 'rongcloud-sdk' );
+var rongcloudSDK = require('rongcloud-sdk');
 
 //db
-var config = JSON.parse(fs.readFileSync('./config.json','utf-8'))
+var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'))
 var db = mongoose.connect(config.mongodbURL)
-db.connection.on("error", function(err) {
+db.connection.on("error", function (err) {
     console.log("db connect failed: " + err)
 })
-db.connection.on('open', function() {
+db.connection.on('open', function () {
     console.log('db connect success')
 })
 
@@ -23,6 +23,8 @@ rongcloudSDK.init(config.rcAppkey, config.rcAppSecret);
 var models = require("../models/user")
 
 // status dictionary
+
+/**
 var statusCodeDictionary = {
     "000": ("Network error", false),
     "200": ("Login Success", true),
@@ -38,10 +40,18 @@ var statusCodeDictionary = {
     "370": ("Account exist", false),
 
     "400": ("搜索成功", true),
-    "410": ("未找到符合条件的用户", false)
-}
+    "410": ("未找到符合条件的用户", false),
 
-String.prototype.isEmpty = function() {
+    "500": ("关注成功", true),
+    "510": ("关注失败", false),
+    "520": ("取消关注成功", true),
+    "530": ("取消关注失败", false),
+    "540": ("获取关注列表成功", true),
+    "550": ("获取关注列表失败", false)
+}
+ */
+
+String.prototype.isEmpty = function () {
     return this === undefined || this.trim() === ""
 }
 
@@ -75,7 +85,7 @@ router.post("/app.register", function (req, res, next) {
         return
     }
     console.log("Register -- account: " + account + ", password: " + password)
-    models.user_login.find({'_id': account}, function(err, docs) {
+    models.user_login.find({'_id': account}, function (err, docs) {
         if (err) {
             console.log("register error: " + err)
         } else if (docs.length === 0) {
@@ -89,7 +99,7 @@ router.post("/app.register", function (req, res, next) {
             })
             userLogin.save(function (err, docs) {
                 if (err) {
-                    // register failed
+                    // register failedR
                     console.log("userLogin save failed")
                     res.send(status(350))
                 } else {
@@ -103,7 +113,7 @@ router.post("/app.register", function (req, res, next) {
                 _id: account,
                 phone: req.body.phone,
                 email: req.body.email,
-                nickname: req.body.nickname,
+                nickname: req.body.nickname === undefined ? req.body.account : req.body.nickname,
             })
             userInfo.save(function (err, docs) {
                 if (err) {
@@ -129,7 +139,7 @@ router.post("/app.login", function (req, res, next) {
         return
     }
     console.log("login account: " + account + ", password: " + password)
-    models.user_login.find({'_id': account, 'password': password}, function(err, docs) {
+    models.user_login.find({'_id': account, 'password': password}, function (err, docs) {
         if (err) {
             // login failed
             console.log("login failed")
@@ -146,7 +156,7 @@ router.post("/app.login", function (req, res, next) {
                 var userInfo = {
                     "account": account
                 }
-                models.user_info.find({"_id": account}, function(err, docs) {
+                models.user_info.find({_id: account}, function (err, docs) {
                     if (docs.length !== 0) {
                         userInfo = {
                             "account": account,
@@ -158,16 +168,16 @@ router.post("/app.login", function (req, res, next) {
 
                     rongcloudSDK.user.getToken(
                         account,
-                        docs[0]["nickname"] === undefined? "defaultNickname": docs[0]["nickname"],
+                        docs[0]["nickname"] === undefined ? "defaultNickname" : docs[0]["nickname"],
                         "http://www.rongcloud.cn/docs/assets/img/logo_s@2x.png",
-                        function(err, resultText) {
-                            if( err ) {
+                        function (err, resultText) {
+                            if (err) {
                                 // Handle the error
                                 console.log(err)
                             }
                             else {
                                 var result = JSON.parse(resultText);
-                                if( result.code === 200 ) {
+                                if (result.code === 200) {
                                     //Handle the result.token
                                     userInfo.rcToken = result.token
                                     res.send({
@@ -178,7 +188,7 @@ router.post("/app.login", function (req, res, next) {
                                     console.log("result.code not 200")
                                 }
                             }
-                         });
+                        });
                 })
             }
         }
@@ -188,7 +198,8 @@ router.post("/app.login", function (req, res, next) {
 router.post("/app.search.account", function (req, res, next) {
     //app.search.account by acount
     var account = req.body.account.toString()
-    models.user_info.find({'_id': new RegExp(account, "i")}, function(err, docs) {
+    var searchString = req.body.searchString.toString()
+    models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
         if (err) {
             console.log("/app.search.account error: " + err)
         } else if (docs.length === 0) {
@@ -196,9 +207,112 @@ router.post("/app.search.account", function (req, res, next) {
                 "status": "410"
             })
         } else {
+            for (var i = 0; i < docs.length; i += 1) {
+                if (docs[i]._id === account) {
+                    docs.splice(i, 1)
+                    break
+                }
+            }
             res.send({
                 "status": "400",
                 "users": docs
+            })
+        }
+    })
+})
+
+
+/*
+ * follow_info = {
+ *   _id: {type: String},
+ *   "type": {type: Int}// 1 one way, 2  two way
+ * }
+ * */
+router.post("/app.friend.following", function (req, res, next) {
+    var account = req.body.account.toString()
+    models.user_following.find({_id: account}, function (err, docs) {
+        if (err || docs.length === 0) {
+            res.send(status(550))
+            return
+        }
+        res.send({
+            "status": "540",
+            "follow_infos": docs[0].follow_infos
+        })
+    })
+})
+
+router.post("/app.friend.unfollow", function(req, res, next) {
+    var account = req.body.account.toString()
+    var targetID = req.body.targetID.toString()
+})
+
+router.post("/app.friend.follow", function (req, res, next) {
+    var account = req.body.account.toString()
+    var targetID = req.body.targetID.toString()
+    models.user_following.find({_id: account}, function (err, docs) {
+        if (err) {
+            console.log("user_following.find error: " + err)
+        } else {
+            if (docs.length !== 0) {
+                var follow_infos = docs[0].follow_infos
+                for (var i = 0; i < follow_infos.length; i += 1) {
+                    if (follow_infos[i]._id === targetID) {
+                        res.send(status(510))
+                        return
+                    }
+                }
+            }
+
+            models.user_following.find({_id: targetID}, function (target_err, target_docs) {
+                var type = 1
+                if (target_err) {
+                    console.log("err " + err)
+                } else if (target_docs.length !== 0) {
+                    var target_follow_infos = target_docs[0].follow_infos
+                    for (var i = 0; i < target_follow_infos.length; i += 1) {
+                        if (target_follow_infos[i]._id === account) {
+                            target_follow_infos[i].type = 2;
+                            type = 2
+                            models.user_following.update({_id: targetID}, {$set: {follow_infos: target_follow_infos}}, function(err, docs){})
+                            break
+                        }
+                    }
+                }
+
+                if (docs.length === 0) {
+                    var follow_infos = []
+                    follow_infos.push({
+                        _id: targetID,
+                        type: type
+                    })
+                    var userFollow = new models.user_following({
+                        _id: account,
+                        follow_infos: follow_infos
+                    })
+                    userFollow.save(function (err, docs) {
+                        if (err) {
+                            console.log(err)
+                            res.send(status(510))
+                        } else {
+                            res.send(status(500))
+                        }
+                    })
+                } else {
+                    var follow_infos = docs[0].follow_infos
+                    follow_infos.push({
+                        _id: targetID,
+                        type: type
+                    })
+                    models.user_following.update({_id: account}, {$set: {follow_infos: follow_infos}}, function(err, docs) {
+                        if (err) {
+                            console.log(err)
+                            res.send(status(510))
+                        } else {
+                            res.send(status(500))
+                        }
+                    })
+                }
             })
         }
     })
