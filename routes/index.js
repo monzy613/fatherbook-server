@@ -180,9 +180,16 @@ router.post("/app.login", function (req, res, next) {
                                 if (result.code === 200) {
                                     //Handle the result.token
                                     userInfo.rcToken = result.token
-                                    res.send({
-                                        "status": "200",
-                                        "userInfo": userInfo
+                                    queryFollowing(account, function(arr){
+                                        //onSuccess
+                                        res.send({
+                                            "status": "200",
+                                            "userInfo": userInfo,
+                                            "follow_infos": arr
+                                        })
+                                    }, function(){
+                                        //onFailed
+                                        res.send(status(210))
                                     })
                                 } else {
                                     console.log("result.code not 200")
@@ -202,10 +209,6 @@ router.post("/app.search.account", function (req, res, next) {
     models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
         if (err) {
             console.log("/app.search.account error: " + err)
-        } else if (docs.length === 0) {
-            res.send({
-                "status": "410"
-            })
         } else {
             for (var i = 0; i < docs.length; i += 1) {
                 if (docs[i]._id === account) {
@@ -213,10 +216,17 @@ router.post("/app.search.account", function (req, res, next) {
                     break
                 }
             }
+            if (docs.length === 0) {
+                res.send({
+                    "status": "410"
+                })
+                return
+            }
             res.send({
                 "status": "400",
                 "users": docs
             })
+
         }
     })
 })
@@ -224,27 +234,85 @@ router.post("/app.search.account", function (req, res, next) {
 
 /*
  * follow_info = {
- *   _id: {type: String},
+ *   _id: {type: UserInfo},
  *   "type": {type: Int}// 1 one way, 2  two way
  * }
  * */
+
 router.post("/app.friend.following", function (req, res, next) {
     var account = req.body.account.toString()
-    models.user_following.find({_id: account}, function (err, docs) {
-        if (err || docs.length === 0) {
-            res.send(status(550))
-            return
-        }
+    queryFollowing(account, function(arr){
+        //onSuccess
         res.send({
             "status": "540",
-            "follow_infos": docs[0].follow_infos
+            "follow_infos": arr
         })
+    }, function(){
+        //onFailed
+        res.send(status(550))
     })
 })
+
+function queryFollowing(account, onSuccess, onFailed) {
+    models.user_following.find({_id: account}, function (err, docs) {
+        if (err || docs.length === 0) {
+            onFailed()
+            return
+        }
+        models.user_info.find({_id: {$in: getIDArray(docs[0].follow_infos)}}, function (err2, docs2) {
+            if (err2 || docs2.length === 0) {
+                onFailed()
+                return
+            }
+            var arr = docs2.map(function(ele) {
+                ele.set("type", getFollowTypeByID(ele._id, docs[0].follow_infos), {strict: false})
+                return ele
+            })
+            onSuccess(arr)
+        })
+    })
+}
 
 router.post("/app.friend.unfollow", function(req, res, next) {
     var account = req.body.account.toString()
     var targetID = req.body.targetID.toString()
+    models.user_following.find({_id: {$in: [account, targetID]}}, function (err, docs) {
+        if (err || docs.length === 0) {
+            console.log("app.friend.unfollow failed: " + err)
+            res.send(status(530))
+            return
+        }
+        var follow_infos = []
+        if (docs.length === 1) {
+            follow_infos = docs[0].follow_infos
+        } else {
+            var accountIndex = (docs[0]._id === account? 0: 1)
+            var targetIndex = (docs[0]._id === targetID? 0: 1)
+            follow_infos = docs[accountIndex].follow_infos
+            var target_follow_infos = docs[targetIndex].follow_infos
+            for (var t = 0; t < target_follow_infos.length; t += 1) {
+                if (target_follow_infos[t]._id === account && target_follow_infos[t].type === 2) {
+                    target_follow_infos[t].type = 1
+                    models.user_following.update({_id: targetID}, {$set: {follow_infos: target_follow_infos}}, function(err, docs){})
+                    break
+                }
+            }
+        }
+        for (var i = 0; i < follow_infos.length; i += 1) {
+            if (follow_infos[i]._id === targetID) {
+                follow_infos.splice(i, 1)
+                break
+            }
+        }
+        models.user_following.update({_id: account}, {$set: {follow_infos: follow_infos}}, function(err, docs){
+            if (err) {
+                console.log("unfollow failed")
+                res.send(status(530))
+            } else {
+                res.send(status(520))
+            }
+        })
+    })
 })
 
 router.post("/app.friend.follow", function (req, res, next) {
@@ -322,6 +390,25 @@ function status(code) {
     return {
         "status": code.toString()
     }
+}
+
+function getIDArray(follow_infos) {
+    var IDs = []
+    for (var i = 0; i < follow_infos.length; i += 1) {
+        IDs.push(follow_infos[i]._id)
+    }
+    return IDs
+}
+
+function getFollowTypeByID(id, follow_infos) {
+    var type = 0
+    for (var i = 0; i < follow_infos.length; i += 1) {
+        if (follow_infos[i]._id === id) {
+            type = follow_infos[i].type
+            break
+        }
+    }
+    return type
 }
 
 module.exports = router
