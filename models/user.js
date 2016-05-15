@@ -27,10 +27,16 @@ var user_friend = new mongoose.Schema ({
     friends_ids: {type: Array}
 });
 
-var user_apply = new mongoose.Schema ({
+/*
+* follow_info = {
+*   "_id": {type: String},
+*   "type": {type: Int}// 1 one way, 2  two way
+* }
+* */
+var user_following = new mongoose.Schema ({
     _id: {type: String},
-    applier_ids: {type: Array}
-});
+    follow_infos: {type: Array}
+})
 
 var user_position = new mongoose.Schema ({
     _id: {type: String},
@@ -56,7 +62,7 @@ module.exports = {
     user_info: mongoose.model('user_info', user_info),
     user_blog: mongoose.model('user_blog', user_blog),
     user_friend: mongoose.model('user_friend', user_friend),
-    user_apply: mongoose.model('user_apply', user_apply),
+    user_following: mongoose.model('user_following', user_following),
     user_gallery: mongoose.model('user_gallery', user_gallery),
     user_position: mongoose.model('user_position', user_position)
 }
