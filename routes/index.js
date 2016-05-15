@@ -261,12 +261,16 @@ function queryFollowing(account, onSuccess, onFailed) {
             return
         }
         if (docs.length === 0) {
-            onSuccess(undefined)
+            onSuccess([])
             return
         }
         models.user_info.find({_id: {$in: getIDArray(docs[0].follow_infos)}}, function (err2, docs2) {
-            if (err2 || docs2.length === 0) {
+            if (err2) {
                 onFailed()
+                return
+            }
+            if (docs2.length === 0) {
+                onSuccess([])
                 return
             }
             var arr = docs2.map(function(ele) {
