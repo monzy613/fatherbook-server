@@ -189,6 +189,7 @@ router.post("/app.login", function (req, res, next) {
                                         })
                                     }, function(){
                                         //onFailed
+                                        console.log("onFailed")
                                         res.send(status(210))
                                     })
                                 } else {
@@ -255,13 +256,21 @@ router.post("/app.friend.following", function (req, res, next) {
 
 function queryFollowing(account, onSuccess, onFailed) {
     models.user_following.find({_id: account}, function (err, docs) {
-        if (err || docs.length === 0) {
+        if (err) {
             onFailed()
             return
         }
+        if (docs.length === 0) {
+            onSuccess([])
+            return
+        }
         models.user_info.find({_id: {$in: getIDArray(docs[0].follow_infos)}}, function (err2, docs2) {
-            if (err2 || docs2.length === 0) {
+            if (err2) {
                 onFailed()
+                return
+            }
+            if (docs2.length === 0) {
+                onSuccess([])
                 return
             }
             var arr = docs2.map(function(ele) {
