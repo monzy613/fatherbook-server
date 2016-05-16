@@ -27,6 +27,8 @@ var models = require("../models/user")
 /**
 var statusCodeDictionary = {
     "000": ("Network error", false),
+    "100": ("Get RC Token Success", true),
+    "110": ("Get RC Token Failed", false),
     "200": ("Login Success", true),
     "210": ("Wrong password or account", false),
 
@@ -157,54 +159,71 @@ router.post("/app.login", function (req, res, next) {
                     "account": account
                 }
                 models.user_info.find({_id: account}, function (err, docs) {
-                    if (docs.length !== 0) {
+                    if (err || docs.length === 0) {
+                        res.send(status(210));
+                        return
+                    }
+                    queryFollowing(account, function(arr){
+                        //onSuccess
                         userInfo = {
                             "account": account,
                             "phone": docs[0]["phone"],
                             "email": docs[0]["email"],
-                            "nickname": docs[0]["nickname"]
+                            "nickname": docs[0]["nickname"],
+                            "follow_infos": arr
                         }
-                    }
-
-                    rongcloudSDK.user.getToken(
-                        account,
-                        docs[0]["nickname"] === undefined ? "defaultNickname" : docs[0]["nickname"],
-                        "http://www.rongcloud.cn/docs/assets/img/logo_s@2x.png",
-                        function (err, resultText) {
-                            if (err) {
-                                // Handle the error
-                                console.log(err)
-                            }
-                            else {
-                                var result = JSON.parse(resultText);
-                                if (result.code === 200) {
-                                    //Handle the result.token
-                                    userInfo.rcToken = result.token
-                                    queryFollowing(account, function(arr){
-                                        //onSuccess
-                                        res.send({
-                                            "status": "200",
-                                            "userInfo": userInfo,
-                                            "follow_infos": arr
-                                        })
-                                    }, function(){
-                                        //onFailed
-                                        console.log("onFailed")
-                                        res.send(status(210))
-                                    })
-                                } else {
-                                    console.log("result.code not 200")
-                                }
-                            }
-                        });
+                        res.send({
+                            "status": "200",
+                            "userInfo": userInfo
+                        })
+                    }, function(){
+                        //onFailed
+                        console.log("onFailed")
+                        res.send(status(210))
+                    })
                 })
             }
         }
     })
 })
 
+router.post("/app.rongcloud.token", function (req, res, next) {
+    // /app.rongcloud.token
+    var account = req.body.account.toString()
+    models.user_info.find({'_id': account}, function (err, docs) {
+        if (err || docs.length === 0) {
+            res.send(status(110))
+        } else {
+            rongcloudSDK.user.getToken(
+                account,
+                docs[0]["nickname"] === undefined ? "defaultNickname" : docs[0]["nickname"],
+                "http://www.rongcloud.cn/docs/assets/img/logo_s@2x.png",
+                function (err, resultText) {
+                    if (err) {
+                        // Handle the error
+                        console.log(err)
+                        res.send(status(110))
+                    } else {
+                        var result = JSON.parse(resultText);
+                        if (result.code === 200) {
+                            //Handle the result.token
+                            var rcToken = result.token
+                            res.send({
+                                "status": "100",
+                                "rcToken": rcToken
+                            })
+                        } else {
+                            console.log("result.code not 200")
+                            res.send(status(110))
+                        }
+                    }
+                });
+        }
+    })
+})
+
 router.post("/app.search.account", function (req, res, next) {
-    //app.search.account by acount
+    // /app.search.account by acount
     var account = req.body.account.toString()
     var searchString = req.body.searchString.toString()
     models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
