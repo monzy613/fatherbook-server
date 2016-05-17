@@ -1,25 +1,14 @@
 var crypto = require('crypto')
 var express = require("express")
-var mongoose = require("mongoose")
 var router = express.Router()
 var swig = require("swig")
-var fs = require('fs')
 var rongcloudSDK = require('rongcloud-sdk');
-
-//db
-var config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'))
-var db = mongoose.connect(config.mongodbURL)
-db.connection.on("error", function (err) {
-    console.log("db connect failed: " + err)
-})
-db.connection.on('open', function () {
-    console.log('db connect success')
-})
-
+var config = require("../util/config")
+var db = require("../util/db")
 //rc
 rongcloudSDK.init(config.rcAppkey, config.rcAppSecret);
 
-// doc modals
+// doc modal
 var models = require("../models/user")
 
 // status dictionary
