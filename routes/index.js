@@ -38,12 +38,22 @@ var statusCodeDictionary = {
     "520": ("取消关注成功", true),
     "530": ("取消关注失败", false),
     "540": ("获取关注列表成功", true),
-    "550": ("获取关注列表失败", false)
+    "550": ("获取关注列表失败", false),
+
+    "600": ("timeline 发送成功", true),
+    "610": ("timeline 发送失败", false),
+    "620": ("timeline 获取成功", true),
+    "630": ("timeline 获取失败", false)
 }
  */
 
 String.prototype.isEmpty = function () {
     return this === undefined || this.trim() === ""
+}
+
+Date.timeStamp = function() {
+    var time = new Date().getTime()
+    return Math.floor(time / 1000)
 }
 
 /* GET home page. */
@@ -384,7 +394,7 @@ router.post("/app.friend.follow", function (req, res, next) {
                         }
                     })
                 } else {
-                    var follow_infos = docs[0].follow_infos
+                    follow_infos = docs[0].follow_infos
                     follow_infos.push({
                         _id: targetID,
                         type: type
@@ -400,6 +410,75 @@ router.post("/app.friend.follow", function (req, res, next) {
                 }
             })
         }
+    })
+})
+
+router.post("/app.timeline.post", function(req, res, next) {
+    var account = req.body.account.toString()
+    var password = req.body.password.toString()
+    models.user_login.find({_id: account, password: password}, function(err, docs) {
+        if (err || docs.length === 0) {
+            console.log(err)
+            res.send(status(610))
+        } else {
+            //found
+            var text = req.body.text.toString()
+            var images = req.body.images
+            var timeStamp = Date.timeStamp()
+            var timeline = new models.user_timeline({
+                account: account,
+                text: text,
+                images: images,
+                timeStamp: timeStamp
+            })
+            timeline.save(function(saveErr, saveDocs) {
+                if (saveErr) {
+                    console.log(saveErr)
+                    res.send(status(610))
+                } else {
+                    res.send(status(600))
+                }
+            })
+        }
+    })
+})
+
+router.get("/app.timeline.following", function(req, res, next) {
+    var account = req.query.account
+    if (account === undefined || account === "") {
+        res.send(status(630))
+        return
+    }
+})
+
+router.get("/app.timeline.get", function(req, res, next) {
+    var account = req.query.account
+    if (account === undefined || account === "") {
+        res.send(status(630))
+        return
+    }
+    models.user_timeline.find({account: account}, function(err, docs) {
+        if (err) {
+            res.send(status(630))
+            return
+        }
+        if (docs.length === 0) {
+            res.send({
+                status: "620",
+                timelines: []
+            })
+            return
+        }
+        res.send({
+            status: "620",
+            timelines: docs.sort(function(a, b) {
+                return a.timeStamp < b.timeStamp
+            }).map(function(element) {
+                element.__v = undefined
+                element._id = undefined
+                return element
+            })
+        })
     })
 })
 

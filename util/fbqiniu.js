@@ -1,5 +1,5 @@
 var qiniu = require("qiniu")
-import config from "../util/config"
+var config = require("./config")
 
 var fbqiniu = {}
 //需要填写你的 Access Key 和 Secret Key
@@ -14,8 +14,8 @@ bucket = config.qnBucketName
  * parameter: filename
  * return token for the filename
 * */
-fbqiniu.getUploadInfo = function(filename) {
-    var putPolicy = new qiniu.rs.PutPolicy(bucket + ":" + filename)
+fbqiniu.getUploadInfo = function(key) {
+    var putPolicy = new qiniu.rs.PutPolicy(bucket + ":" + key)
     return putPolicy.token()
 }
 
