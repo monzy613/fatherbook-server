@@ -21,7 +21,12 @@ var user_timeline = new mongoose.Schema ({
     account: {type: String},
     images: {type: Array},
     text: {type: String},
-    timeStamp: {type: String}
+    timeStamp: {type: String},
+    repostCount: {type: String},
+    isRepost: {type: Boolean},
+    sourceTimeline: {type: {}},
+    comments: {type: Array},
+    liked: {type: Array}
 })
 
 var user_friend = new mongoose.Schema ({
