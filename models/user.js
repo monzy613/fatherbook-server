@@ -23,7 +23,7 @@ var user_timeline = new mongoose.Schema ({
     images: {type: Array},
     text: {type: String},
     timeStamp: {type: String},
-    repostCount: {type: String},
+    repostCount: 0,
     isRepost: {type: Boolean},
     repostTimeline: {type: {}},
     comments: {type: Array},
