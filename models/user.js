@@ -19,12 +19,13 @@ var user_info = new mongoose.Schema ({
 
 var user_timeline = new mongoose.Schema ({
     account: {type: String},
+    userInfo: {type: {}},
     images: {type: Array},
     text: {type: String},
     timeStamp: {type: String},
     repostCount: {type: String},
     isRepost: {type: Boolean},
-    sourceTimeline: {type: {}},
+    repostTimeline: {type: {}},
     comments: {type: Array},
     liked: {type: Array}
 })

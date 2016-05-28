@@ -5,7 +5,6 @@ var swig = require("swig")
 var rongcloudSDK = require('rongcloud-sdk');
 var config = require("../util/config")
 var mongoose = require("mongoose")
-var sets = require("simplesets")
 
 //db
 var db = require("../util/db")
@@ -68,24 +67,7 @@ Date.timeStamp = function() {
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-    res.render("index", {
-        pagename: "awesome people",
-        authors: ["Paul", "Jim", "Jane"]
-    })
-})
-
-router.route("/register").get(function (req, res) {
-    //render register
-}).post(function (req, res, next) {
-    var account = req.body.account
-    var password = req.body.password
-})
-
-router.route("/login").get(function (req, res) {
-    //render login
-}).post(function (req, res, next) {
-    var account = req.body.account
-    var password = req.body.password
+    res.send("/")
 })
 
 /* App api */
@@ -438,7 +420,7 @@ router.post("/app.friend.follow", function (req, res, next) {
 router.post("/app.timeline.post", function(req, res, next) {
     var account = req.body.account.toString()
     var password = req.body.password.toString()
-    models.user_login.find({_id: account, password: password}, function(err, docs) {
+    models.user_info.find({_id: account}, function(err, docs) {
         if (err || docs.length === 0) {
             console.log(err)
             res.send(status(610))
@@ -449,12 +431,13 @@ router.post("/app.timeline.post", function(req, res, next) {
             var timeStamp = Date.timeStamp()
             var timeline = new models.user_timeline({
                 account: account,
+                userInfo: docs[0],
                 text: text,
                 images: images,
                 timeStamp: timeStamp,
                 repostCount: "0",
                 isRepost: false,
-                sourceTimeLine: undefined,
+                repostTimeline: undefined,
                 comments: undefined,
                 liked: undefined
             })
@@ -468,44 +451,48 @@ router.post("/app.timeline.post", function(req, res, next) {
             })
         }
     })
+    // models.user_login.find({_id: account, password: password}, function(err, docs) {
+    // })
 })
 
 router.post("/app.timeline.like", function(req, res, next) {
     var account = req.body.account.toString()
     var timelineID = req.body.timelineID.toString()
+    // var account = "a"
+    // var timelineID = "5749456e4d64ad5908e35adb"
     models.user_info.find({_id: account}, function(userInfoError, userInfoDocs) {
-        if (userInfoError || userInfoDocs.count === 0) {
+        if (userInfoError || userInfoDocs.length === 0) {
             res.send({
                 "status": "650",
                 "error": userInfoError
             })
-            return;
-        }
-        var id = mongoose.Types.ObjectId(timelineID)
-        models.user_timeline.find({_id: id}, function(timelineError, timelineDocs) {
-            if (timelineError || timelineDocs.count === 0) {
-                res.send({
-                    "status": "650",
-                    "error": timelineError
-                })
-                return;
-            }
-            var likeArray = timelineDocs[0].liked
-            likeArray = like(account, likeArray)
-            console.log(likeArray)
-            models.user_timeline.update({_id: id}, {$set: {liked: likeArray}}, function (likeError, likeDocs) {
-                if (likeError) {
+        } else {
+            var id = mongoose.Types.ObjectId(timelineID)
+            models.user_timeline.find({_id: id}, function (timelineError, timelineDocs) {
+                if (timelineError || timelineDocs.length === 0) {
                     res.send({
                         "status": "650",
-                        "error": likeError
-                    });
-                    return;
+                        "error": timelineError
+                    })
+                } else {
+                    var likeArray = timelineDocs[0].liked
+                    like(userInfoDocs[0], likeArray)
+                    console.log(likeArray)
+                    models.user_timeline.update({_id: id}, {$set: {liked: likeArray}}, function (likeError, likeDocs) {
+                        if (likeError) {
+                            res.send({
+                                "status": "650",
+                                "error": likeError
+                            });
+                        } else {
+                            res.send({
+                                "status": "640"
+                            })
+                        }
+                    })
                 }
-                res.send({
-                    "status": "640"
-                })
             })
-        })
+        }
     })
 })
 
@@ -514,26 +501,27 @@ router.post("/app.timeline.unlike", function(req, res, next) {
     var timelineID = req.body.timelineID.toString()
     var id = mongoose.Types.ObjectId(timelineID)
     models.user_timeline.find({_id: id}, function(timelineError, timelineDocs) {
-        if (timelineError || timelineDocs.count === 0) {
+        if (timelineError || timelineDocs.length === 0) {
             res.send({
                 "status": "670",
                 "error": unlikeError
-            });
-            return
-        }
-        var likeArray = unlike(account, timelineDocs[0].liked)
-        models.user_timeline.update({_id: id}, {$set: {liked: likeArray}}, function (unlikeError, unlikeDocs) {
-            if (unlikeError) {
-                res.send({
-                    "status": "670",
-                    "error": unlikeError
-                });
-                return;
-            }
-            res.send({
-                "status": "660"
             })
-        })
+        } else {
+            var likeArray = unlike(account, timelineDocs[0].liked)
+            console.log(likeArray)
+            models.user_timeline.update({_id: id}, {$set: {liked: likeArray}}, function (unlikeError, unlikeDocs) {
+                if (unlikeError) {
+                    res.send({
+                        "status": "670",
+                        "error": unlikeError
+                    })
+                } else {
+                    res.send({
+                        "status": "660"
+                    })
+                }
+            })
+        }
     })
 })
 
@@ -600,14 +588,28 @@ function getFollowTypeByID(id, follow_infos) {
     return type
 }
 
-function like(account, likeArray) {
-    likeArray.push(account)
-    var set = new sets.Set(likeArray)
-    return set._items
+function like(userInfo, likeArray) {
+    var inserted = false
+    for (var i = 0; i < likeArray.length; i += 1) {
+        if (userInfo._id === likeArray[i]._id) {
+            likeArray[i] = userInfo;
+            inserted = true
+            break
+        }
+    }
+    if (!inserted) {
+        likeArray.push(userInfo)
+    }
+    return likeArray
 }
 
 function unlike(account, likeArray) {
-    likeArray.splice(likeArray.indexOf(account), 1)
+    for (var i = 0; i < likeArray.length; i += 1) {
+        if (account === likeArray[i]._id) {
+            likeArray.splice(i, 1)
+            break
+        }
+    }
     return likeArray
 }
 
