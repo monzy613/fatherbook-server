@@ -12,6 +12,9 @@ var db = require("../util/db")
 //rc
 rongcloudSDK.init(config.rcAppkey, config.rcAppSecret);
 
+//qn
+var qn = require("../util/fbqiniu")
+
 // doc modal
 var models = require("../models/user")
 
@@ -165,7 +168,14 @@ router.post("/app.login", function (req, res, next) {
                         }
                         res.send({
                             "status": "200",
-                            "userInfo": userInfo
+                            "userInfo": userInfo,
+                            "config": {
+                                "rcAppkey": config.rcAppkey,
+                                "rcAppSecret": config.rcAppSecret,
+                                "qnAccessKey": config.qnAccessKey,
+                                "qnSecretKey": config.qnSecretKey,
+                                "qnBucketName": config.qnBucketName
+                            }
                         })
                     }, function(){
                         //onFailed
@@ -427,32 +437,61 @@ router.post("/app.timeline.post", function(req, res, next) {
         } else {
             //found
             var text = req.body.text.toString()
-            var images = req.body.images
+            var imageJSONString = req.body.images
+            var images = []
+            if (imageJSONString !== undefined) {
+                images = JSON.parse(req.body.imageJSONString)
+            }
             var timeStamp = Date.timeStamp()
-            var timeline = new models.user_timeline({
-                account: account,
-                userInfo: docs[0],
-                text: text,
-                images: images,
-                timeStamp: timeStamp,
-                repostCount: 0,
-                isRepost: false,
-                repostTimeline: undefined,
-                comments: undefined,
-                liked: undefined
-            })
-            timeline.save(function(saveErr, saveDocs) {
-                if (saveErr) {
-                    console.log(saveErr)
+            console.log(images)
+            models.maxIDTrack.find({_id: models.trackInfo.timeline}, function(maxIDErr, maxIDDocs) {
+                if (maxIDErr || maxIDDocs.length === 0) {
+                    console.log(err)
                     res.send(status(610))
                 } else {
-                    res.send(status(600))
+                    var newID = maxIDDocs[0].maxID + 1
+                    models.maxIDTrack.update({_id: models.trackInfo.timeline}, {$set: {maxID: newID}}, function(updateMaxIDErr, updateMaxIDDocs) {})
+                    var successJSON = {
+                        success: "600",
+                    }
+                    if (images.length !== 0) {
+                        var tokenArray = []
+                        for (var i = 0;i < images.length; i += 1) {
+                            var index = images[i].index
+                            var absoluteURL  = imageURL(newID, index)
+                            images[i].absoluteURL = absoluteURL
+                            tokenArray.push({
+                                index: index,
+                                token: qn.getUploadInfo(absoluteURL)
+                            })
+                        }
+                        successJSON.tokens = tokenArray
+                    }
+                    var timeline = new models.user_timeline({
+                        _id: newID,
+                        account: account,
+                        userInfo: docs[0],
+                        text: text,
+                        images: images,
+                        timeStamp: timeStamp,
+                        repostCount: 0,
+                        isRepost: false,
+                        repostTimeline: undefined,
+                        comments: undefined,
+                        liked: undefined
+                    })
+                    timeline.save(function(saveErr, saveDocs) {
+                        if (saveErr) {
+                            console.log(saveErr)
+                            res.send(status(610))
+                        } else {
+                            res.send(successJSON)
+                        }
+                    })
                 }
             })
         }
     })
-    // models.user_login.find({_id: account, password: password}, function(err, docs) {
-    // })
 })
 
 router.post("/app.timeline.like", function(req, res, next) {
@@ -611,6 +650,10 @@ function unlike(account, likeArray) {
         }
     }
     return likeArray
+}
+
+function imageURL(timelineID, index) {
+    return timelineID + "/" + index + ".jpg"
 }
 
 module.exports = router

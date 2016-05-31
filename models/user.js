@@ -18,6 +18,7 @@ var user_info = new mongoose.Schema ({
 })
 
 var user_timeline = new mongoose.Schema ({
+    _id: 0,
     account: {type: String},
     userInfo: {type: {}},
     images: {type: Array},
@@ -29,6 +30,15 @@ var user_timeline = new mongoose.Schema ({
     comments: {type: Array},
     liked: {type: Array}
 })
+
+var maxIDTrack = new mongoose.Schema ({
+    _id: {type: String},
+    maxID: 0
+})
+
+var trackInfo = {
+    timeline: "timeline"
+}
 
 var user_friend = new mongoose.Schema ({
     _id: {type: String},
@@ -72,5 +82,7 @@ module.exports = {
     user_friend: mongoose.model('user_friend', user_friend),
     user_following: mongoose.model('user_following', user_following),
     user_gallery: mongoose.model('user_gallery', user_gallery),
-    user_position: mongoose.model('user_position', user_position)
+    user_position: mongoose.model('user_position', user_position),
+    maxIDTrack: mongoose.model('maxIDTrack', maxIDTrack),
+    trackInfo: trackInfo
 }
