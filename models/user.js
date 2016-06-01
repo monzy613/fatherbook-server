@@ -14,7 +14,9 @@ var user_info = new mongoose.Schema ({
     _id: {type: String},
     phone: {type: String},
     email: {type: String},
-    nickname: {type: String}
+    nickname: {type: String},
+    avatarURL: {type: String},
+    isDefaultAvatar: {type: Boolean}
 })
 
 var user_timeline = new mongoose.Schema ({

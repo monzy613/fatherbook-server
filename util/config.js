@@ -7,7 +7,9 @@ var config = {
     rcAppSecret: cfg.rcAppSecret,
     qnAccessKey: cfg.qnAccessKey,
     qnSecretKey: cfg.qnSecretKey,
-    qnBucketName: cfg.qnBucketName
+    qnBucketName: cfg.qnBucketName,
+    qnBucketDomain: cfg.qnBucketDomain,
+    allUsers: cfg.allUsers
 }
 
 module.exports = config

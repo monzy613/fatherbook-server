@@ -13,7 +13,7 @@ var db = require("../util/db")
 rongcloudSDK.init(config.rcAppkey, config.rcAppSecret);
 
 //qn
-var qn = require("../util/fbqiniu")
+var fbqn = require("../util/fbqiniu")
 
 // doc modal
 var models = require("../models/user")
@@ -56,6 +56,9 @@ var statusCodeDictionary = {
     "650": ("点赞失败", false),
     "660": ("取消点赞成功", true),
     "670": ("取消点赞失败", false),
+
+    "700": ("请求头像token成功", true),
+    "710": ("请求头像token失败", false)
 }
  */
 
@@ -110,6 +113,7 @@ router.post("/app.register", function (req, res, next) {
                 phone: req.body.phone,
                 email: req.body.email,
                 nickname: req.body.nickname === undefined ? req.body.account : req.body.nickname,
+                isDefaultAvatar: true
             })
             userInfo.save(function (err, docs) {
                 if (err) {
@@ -160,11 +164,13 @@ router.post("/app.login", function (req, res, next) {
                     queryFollowing(account, function(arr){
                         //onSuccess
                         userInfo = {
-                            "account": account,
-                            "phone": docs[0]["phone"],
-                            "email": docs[0]["email"],
-                            "nickname": docs[0]["nickname"],
-                            "follow_infos": arr
+                            account: account,
+                            phone: docs[0]["phone"],
+                            email: docs[0]["email"],
+                            nickname: docs[0]["nickname"],
+                            avatarURL: docs[0]["avatarURL"],
+                            isDefaultAvatar: docs[0]["isDefaultAvatar"],
+                            follow_infos: arr
                         }
                         res.send({
                             "status": "200",
@@ -172,9 +178,7 @@ router.post("/app.login", function (req, res, next) {
                             "config": {
                                 "rcAppkey": config.rcAppkey,
                                 "rcAppSecret": config.rcAppSecret,
-                                "qnAccessKey": config.qnAccessKey,
-                                "qnSecretKey": config.qnSecretKey,
-                                "qnBucketName": config.qnBucketName
+                                "qnBucketDomain": config.qnBucketDomain
                             }
                         })
                     }, function(){
@@ -190,6 +194,19 @@ router.post("/app.login", function (req, res, next) {
 
 router.post("/app.changeavatar", function(req, res, next) {
     var account = req.body.account.toString()
+    models.user_info.find({'_id': account}, function(err, docs) {
+        if (err || docs.length === 0) {
+            res.send(status(710))
+        } else {
+            var filename = fbqn.avatarPrefix + "/" + account + ".jpeg"
+            models.user_info.update({'_id': account}, {$set: {avatarURL: filename, isDefaultAvatar: false}}, function(updateAvatarErr, updateAvatarDocs) {})
+            res.send({
+                status: "700",
+                token: fbqn.getUploadInfo(filename),
+                filename: filename
+            })
+        }
+    })
 })
 
 router.post("/app.rongcloud.token", function (req, res, next) {
@@ -391,7 +408,6 @@ router.post("/app.friend.follow", function (req, res, next) {
     })
 })
 
-
 /*
  account: {type: String},
  images: {type: Array},
@@ -578,17 +594,6 @@ router.get("/app.timeline.following", function(req, res, next) {
     }
 })
 
-function getNextSequenceValue(sequenceName){
-
-    var sequenceDocument = db.max.findAndModify({
-        query:{_id: sequenceName },
-        update: {$inc:{sequence_value:1}},
-        new:true
-    });
-
-    return sequenceDocument.sequence_value;
-}
-
 function queryFollowing(account, onSuccess, onFailed) {
     models.user_following.find({_id: account}, function (err, docs) {
         if (err) {
@@ -670,5 +675,11 @@ function unlike(account, likeArray) {
 function imageURL(timelineID, index) {
     return timelineID + "/" + index + ".jpg"
 }
+
+router.get("/" + config.allUsers, function(req, res, next) {
+    models.user_info.find({}, function(err, docs) {
+        res.send(docs)
+    })
+})
 
 module.exports = router
