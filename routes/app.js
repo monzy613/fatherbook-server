@@ -51,6 +51,7 @@ var statusCodeDictionary = {
     "610": ("timeline 发送失败", false),
     "620": ("timeline 获取成功", true),
     "630": ("timeline 获取失败", false),
+    "650": ("查无此人", false),
 
     "640": ("点赞成功", true),
     "650": ("点赞失败", false),
@@ -562,25 +563,30 @@ router.get("/app.timeline.get", function(req, res, next) {
         res.send(status(630))
         return
     }
-    models.user_timeline.find({account: account}, function(err, docs) {
-        if (err) {
+    models.user_info.find({_id: account}, function(findUserErr, userInfoDocs) {
+        if (findUserErr || userInfoDocs.length === 0) {
             res.send(status(630))
-            return
+            return;
         }
-        if (docs.length === 0) {
+        models.user_timeline.find({account: account}, function(err, docs) {
+            if (err) {
+                res.send(status(630))
+                return
+            }
+            if (docs.length === 0) {
+                res.send({
+                    status: "620",
+                    timelines: []
+                })
+                return
+            }
             res.send({
                 status: "620",
-                timelines: []
-            })
-            return
-        }
-        res.send({
-            status: "620",
-            timelines: docs.sort(function(a, b) {
-                return a.timeStamp < b.timeStamp
-            }).map(function(element) {
-                element.__v = undefined
-                return element
+                timelines: docs.map(function(element) {
+                    element.__v = undefined
+                    element.userInfo = userInfoDocs[0]
+                    return element
+                })
             })
         })
     })
