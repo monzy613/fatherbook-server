@@ -31,7 +31,7 @@ var user_timeline = new mongoose.Schema ({
     liked: {type: Array}
 })
 
-var maxIDTrack = new mongoose.Schema ({
+var counter = new mongoose.Schema ({
     _id: {type: String},
     maxID: 0
 })
@@ -83,6 +83,6 @@ module.exports = {
     user_following: mongoose.model('user_following', user_following),
     user_gallery: mongoose.model('user_gallery', user_gallery),
     user_position: mongoose.model('user_position', user_position),
-    maxIDTrack: mongoose.model('maxIDTrack', maxIDTrack),
+    counter: mongoose.model('counter', counter),
     trackInfo: trackInfo
 }

@@ -188,6 +188,10 @@ router.post("/app.login", function (req, res, next) {
     })
 })
 
+router.post("/app.changeavatar", function(req, res, next) {
+    var account = req.body.account.toString()
+})
+
 router.post("/app.rongcloud.token", function (req, res, next) {
     // /app.rongcloud.token
     var account = req.body.account.toString()
@@ -273,34 +277,6 @@ router.post("/app.friend.following", function (req, res, next) {
         res.send(status(550))
     })
 })
-
-function queryFollowing(account, onSuccess, onFailed) {
-    models.user_following.find({_id: account}, function (err, docs) {
-        if (err) {
-            onFailed()
-            return
-        }
-        if (docs.length === 0) {
-            onSuccess([])
-            return
-        }
-        models.user_info.find({_id: {$in: getIDArray(docs[0].follow_infos)}}, function (err2, docs2) {
-            if (err2) {
-                onFailed()
-                return
-            }
-            if (docs2.length === 0) {
-                onSuccess([])
-                return
-            }
-            var arr = docs2.map(function(ele) {
-                ele.set("type", getFollowTypeByID(ele._id, docs[0].follow_infos), {strict: false})
-                return ele
-            })
-            onSuccess(arr)
-        })
-    })
-}
 
 router.post("/app.friend.unfollow", function(req, res, next) {
     var account = req.body.account.toString()
@@ -444,13 +420,13 @@ router.post("/app.timeline.post", function(req, res, next) {
             }
             var timeStamp = Date.timeStamp()
             console.log(images)
-            models.maxIDTrack.find({_id: models.trackInfo.timeline}, function(maxIDErr, maxIDDocs) {
+            models.counter.find({_id: models.trackInfo.timeline}, function(maxIDErr, maxIDDocs) {
                 if (maxIDErr || maxIDDocs.length === 0) {
                     console.log(err)
                     res.send(status(610))
                 } else {
                     var newID = maxIDDocs[0].maxID + 1
-                    models.maxIDTrack.update({_id: models.trackInfo.timeline}, {$set: {maxID: newID}}, function(updateMaxIDErr, updateMaxIDDocs) {})
+                    models.counter.update({_id: models.trackInfo.timeline}, {$set: {maxID: newID}}, function(updateMaxIDErr, updateMaxIDDocs) {})
                     var successJSON = {
                         success: "600",
                     }
@@ -601,6 +577,45 @@ router.get("/app.timeline.following", function(req, res, next) {
         return
     }
 })
+
+function getNextSequenceValue(sequenceName){
+
+    var sequenceDocument = db.max.findAndModify({
+        query:{_id: sequenceName },
+        update: {$inc:{sequence_value:1}},
+        new:true
+    });
+
+    return sequenceDocument.sequence_value;
+}
+
+function queryFollowing(account, onSuccess, onFailed) {
+    models.user_following.find({_id: account}, function (err, docs) {
+        if (err) {
+            onFailed()
+            return
+        }
+        if (docs.length === 0) {
+            onSuccess([])
+            return
+        }
+        models.user_info.find({_id: {$in: getIDArray(docs[0].follow_infos)}}, function (err2, docs2) {
+            if (err2) {
+                onFailed()
+                return
+            }
+            if (docs2.length === 0) {
+                onSuccess([])
+                return
+            }
+            var arr = docs2.map(function(ele) {
+                ele.set("type", getFollowTypeByID(ele._id, docs[0].follow_infos), {strict: false})
+                return ele
+            })
+            onSuccess(arr)
+        })
+    })
+}
 
 function status(code) {
     return {
