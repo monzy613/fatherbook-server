@@ -566,7 +566,7 @@ router.get("/app.timeline.get", function(req, res, next) {
     models.user_info.find({_id: account}, function(findUserErr, userInfoDocs) {
         if (findUserErr || userInfoDocs.length === 0) {
             res.send(status(630))
-            return;
+            return
         }
         models.user_timeline.find({account: account}, function(err, docs) {
             if (err) {
@@ -588,6 +588,36 @@ router.get("/app.timeline.get", function(req, res, next) {
                     return element
                 })
             })
+        })
+    })
+})
+
+router.get("/app.timeline.getByFollowing", function(req, res, next) {
+    var account = req.query.account
+    if (account === undefined || account === "") {
+        res.send(status(630))
+        return
+    }
+    models.user_info.find({_id: account}, function(err, docs) {
+        if (err || docs.length === 0) {
+            res.send(status(630))
+            return
+        }
+        queryFollowing(account, function(follow_infos){
+            //onSuccess
+            var accounts = getIDArray(follow_infos)
+            findTimelineByAccountArray(accounts, function(timelines) {
+                res.send({
+                    status: "620",
+                    timelines: timelines
+                })
+            }, function() {
+                //failed
+                res.send(status(630))
+            })
+        }, function(){
+            //onFailed
+            res.send(status(630))
         })
     })
 })
@@ -624,6 +654,56 @@ function queryFollowing(account, onSuccess, onFailed) {
                 return ele
             })
             onSuccess(arr)
+        })
+    })
+}
+
+function findTimelineByAccount(account, onSuccess, onFailed) {
+    models.user_info.find({_id: account}, function(findUserErr, userInfoDocs) {
+        if (findUserErr || userInfoDocs.length === 0) {
+            onFailed()
+            return
+        }
+        models.user_timeline.find({account: account}, function (err, docs) {
+            if (err) {
+                onFailed()
+                return
+            }
+            if (docs.length === 0) {
+                onSuccess([])
+                return
+            }
+            onSuccess(docs.map(function (element) {
+                element.__v = undefined
+                element.userInfo = userInfoDocs[0]
+                return element
+            }))
+        })
+    })
+}
+
+function findTimelineByAccountArray(accounts, onSuccess, onFailed) {
+    models.user_info.find({_id: {$in: accounts}}, function(findUserErr, userInfoDocs) {
+        if (findUserErr || userInfoDocs.length === 0) {
+            onFailed()
+            return
+        }
+        models.user_timeline.find({account: {$in: accounts}}, function (err, docs) {
+            if (err) {
+                onFailed()
+                return
+            }
+            if (docs.length === 0) {
+                onSuccess([])
+                return
+            }
+            onSuccess(docs.map(function (element) {
+                element.__v = undefined
+                element.userInfo = userInfoDocs.filter(function(userInfo) {
+                    return userInfo._id === element.account
+                })[0]
+                return element
+            }))
         })
     })
 }
