@@ -79,8 +79,8 @@ router.get("/", function (req, res, next) {
 
 /* App api */
 router.post("/app.register", function (req, res, next) {
-    var account = req.body.account.toString()
-    var password = req.body.password.toString()
+    var account = req.body.account
+    var password = req.body.password
     if (account.isEmpty() || password.isEmpty()) {
         return
     }
@@ -134,8 +134,8 @@ router.post("/app.register", function (req, res, next) {
 })
 
 router.post("/app.login", function (req, res, next) {
-    var account = req.body.account.toString()
-    var password = req.body.password.toString()
+    var account = req.body.account
+    var password = req.body.password
     if (account.isEmpty() || password.isEmpty()) {
         return
     }
@@ -194,7 +194,7 @@ router.post("/app.login", function (req, res, next) {
 })
 
 router.post("/app.changeavatar", function(req, res, next) {
-    var account = req.body.account.toString()
+    var account = req.body.account
     models.user_info.find({'_id': account}, function(err, docs) {
         if (err || docs.length === 0) {
             res.send(status(710))
@@ -212,7 +212,7 @@ router.post("/app.changeavatar", function(req, res, next) {
 
 router.post("/app.rongcloud.token", function (req, res, next) {
     // /app.rongcloud.token
-    var account = req.body.account.toString()
+    var account = req.body.account
     models.user_info.find({'_id': account}, function (err, docs) {
         if (err || docs.length === 0) {
             res.send(status(110))
@@ -247,8 +247,8 @@ router.post("/app.rongcloud.token", function (req, res, next) {
 
 router.post("/app.search.account", function (req, res, next) {
     // /app.search.account by acount
-    var account = req.body.account.toString()
-    var searchString = req.body.searchString.toString()
+    var account = req.body.account
+    var searchString = req.body.searchString
     models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
         if (err) {
             console.log("/app.search.account error: " + err)
@@ -283,7 +283,7 @@ router.post("/app.search.account", function (req, res, next) {
  * */
 
 router.post("/app.friend.following", function (req, res, next) {
-    var account = req.body.account.toString()
+    var account = req.body.account
     queryFollowing(account, function(arr){
         //onSuccess
         res.send({
@@ -297,8 +297,8 @@ router.post("/app.friend.following", function (req, res, next) {
 })
 
 router.post("/app.friend.unfollow", function(req, res, next) {
-    var account = req.body.account.toString()
-    var targetID = req.body.targetID.toString()
+    var account = req.body.account
+    var targetID = req.body.targetID
     models.user_following.find({_id: {$in: [account, targetID]}}, function (err, docs) {
         if (err || docs.length === 0) {
             console.log("app.friend.unfollow failed: " + err)
@@ -339,8 +339,8 @@ router.post("/app.friend.unfollow", function(req, res, next) {
 })
 
 router.post("/app.friend.follow", function (req, res, next) {
-    var account = req.body.account.toString()
-    var targetID = req.body.targetID.toString()
+    var account = req.body.account
+    var targetID = req.body.targetID
     models.user_following.find({_id: account}, function (err, docs) {
         if (err) {
             console.log("user_following.find error: " + err)
@@ -421,15 +421,15 @@ router.post("/app.friend.follow", function (req, res, next) {
  liked: {type: Array}
 * */
 router.post("/app.timeline.post", function(req, res, next) {
-    var account = req.body.account.toString()
-    var password = req.body.password.toString()
+    var account = req.body.account
+    var password = req.body.password
     models.user_info.find({_id: account}, function(err, docs) {
         if (err || docs.length === 0) {
             console.log(err)
             res.send(status(610))
         } else {
             //found
-            var text = req.body.text.toString()
+            var text = req.body.text
             var imageJSONString = req.body.images
             var images = []
             if (imageJSONString !== undefined) {
@@ -488,37 +488,35 @@ router.post("/app.timeline.post", function(req, res, next) {
 })
 
 router.post("/app.timeline.like", function(req, res, next) {
-    var account = req.body.account.toString()
-    var timelineID = req.body.timelineID.toString()
-    // var account = "a"
-    // var timelineID = "5749456e4d64ad5908e35adb"
+    var account = req.body.account
+    var timelineID = parseInt(req.body.timelineID)
     models.user_info.find({_id: account}, function(userInfoError, userInfoDocs) {
         if (userInfoError || userInfoDocs.length === 0) {
             res.send({
-                "status": "650",
-                "error": userInfoError
+                status: "650",
+                error: userInfoError
             })
         } else {
-            var id = mongoose.Types.ObjectId(timelineID)
-            models.user_timeline.find({_id: id}, function (timelineError, timelineDocs) {
+            models.user_timeline.find({_id: timelineID}, function (timelineError, timelineDocs) {
                 if (timelineError || timelineDocs.length === 0) {
                     res.send({
-                        "status": "650",
-                        "error": timelineError
+                        status: "650",
+                        error: timelineError
                     })
                 } else {
                     var likeArray = timelineDocs[0].liked
                     like(userInfoDocs[0], likeArray)
                     console.log(likeArray)
-                    models.user_timeline.update({_id: id}, {$set: {liked: likeArray}}, function (likeError, likeDocs) {
+                    models.user_timeline.update({_id: timelineID}, {$set: {liked: likeArray}}, function (likeError, likeDocs) {
                         if (likeError) {
                             res.send({
-                                "status": "650",
-                                "error": likeError
+                                status: "650",
+                                error: likeError
                             });
                         } else {
                             res.send({
-                                "status": "640"
+                                status: "640",
+                                liked: likeDocs
                             })
                         }
                     })
@@ -529,10 +527,9 @@ router.post("/app.timeline.like", function(req, res, next) {
 })
 
 router.post("/app.timeline.unlike", function(req, res, next) {
-    var account = req.body.account.toString()
-    var timelineID = req.body.timelineID.toString()
-    var id = mongoose.Types.ObjectId(timelineID)
-    models.user_timeline.find({_id: id}, function(timelineError, timelineDocs) {
+    var account = req.body.account
+    var timelineID = parseInt(req.body.timelineID)
+    models.user_timeline.find({_id: timelineID}, function(timelineError, timelineDocs) {
         if (timelineError || timelineDocs.length === 0) {
             res.send({
                 "status": "670",
@@ -541,7 +538,7 @@ router.post("/app.timeline.unlike", function(req, res, next) {
         } else {
             var likeArray = unlike(account, timelineDocs[0].liked)
             console.log(likeArray)
-            models.user_timeline.update({_id: id}, {$set: {liked: likeArray}}, function (unlikeError, unlikeDocs) {
+            models.user_timeline.update({_id: timelineID}, {$set: {liked: likeArray}}, function (unlikeError, unlikeDocs) {
                 if (unlikeError) {
                     res.send({
                         "status": "670",
@@ -549,7 +546,8 @@ router.post("/app.timeline.unlike", function(req, res, next) {
                     })
                 } else {
                     res.send({
-                        "status": "660"
+                        status: "660",
+                        liked: unlikeDocs
                     })
                 }
             })
