@@ -592,8 +592,16 @@ router.get("/app.timeline.get", function(req, res, next) {
     })
 })
 
+
+/*
+ account | the follower's account not null
+ firstID | default undefined
+ pageSize | default 10
+ * */
 router.get("/app.timeline.getByFollowing", function(req, res, next) {
     var account = req.query.account
+    var maxID = req.query.maxID
+    var count = req.query.count
     if (account === undefined || account === "") {
         res.send(status(630))
         return
@@ -606,7 +614,8 @@ router.get("/app.timeline.getByFollowing", function(req, res, next) {
         queryFollowing(account, function(follow_infos){
             //onSuccess
             var accounts = getIDArray(follow_infos)
-            findTimelineByAccountArray(accounts, function(timelines) {
+            accounts.push(account)
+            findTimelineByAccountArray(accounts, maxID, count, function(timelines) {
                 res.send({
                     status: "620",
                     timelines: timelines
@@ -658,7 +667,24 @@ function queryFollowing(account, onSuccess, onFailed) {
     })
 }
 
+router.get("/app.text", function(req, res, next) {
+    findTimelineByAccount(req.query.account, function(timelines) {
+        res.send(timelines)
+    })
+})
+
 function findTimelineByAccount(account, onSuccess, onFailed) {
+    models.user_timeline.find({account: account}).sort({_id: -1}).limit(5).exec(function(err, docs) {
+        if (err) {
+            onFailed()
+            return
+        }
+        if (docs.length === 0) {
+            onSuccess([])
+        } else {
+            onSuccess(docs)
+        }
+    })
     models.user_info.find({_id: account}, function(findUserErr, userInfoDocs) {
         if (findUserErr || userInfoDocs.length === 0) {
             onFailed()
@@ -682,13 +708,24 @@ function findTimelineByAccount(account, onSuccess, onFailed) {
     })
 }
 
-function findTimelineByAccountArray(accounts, onSuccess, onFailed) {
+function findTimelineByAccountArray(accounts, maxID, count, onSuccess, onFailed) {
     models.user_info.find({_id: {$in: accounts}}, function(findUserErr, userInfoDocs) {
         if (findUserErr || userInfoDocs.length === 0) {
             onFailed()
             return
         }
-        models.user_timeline.find({account: {$in: accounts}}, function (err, docs) {
+        var size = validPageSize(count)
+        var query = {
+            account: {
+                $in: accounts
+            }
+        }
+        if (maxID > 0) {
+            query._id = {
+                $lte: parseInt(maxID)
+            }
+        }
+        models.user_timeline.find(query).sort({_id: -1}).limit(size).exec(function (err, docs) {
             if (err) {
                 onFailed()
                 return
@@ -706,6 +743,17 @@ function findTimelineByAccountArray(accounts, onSuccess, onFailed) {
             }))
         })
     })
+}
+
+function validPageSize(pageSize) {
+    if (pageSize === undefined) {
+        return 10
+    } else if (pageSize <= 0) {
+        return 1
+    } else if (pageSize > 30) {
+        return 30
+    }
+    return parseInt(pageSize)
 }
 
 function status(code) {
