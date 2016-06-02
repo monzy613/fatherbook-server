@@ -14,20 +14,33 @@ var user_info = new mongoose.Schema ({
     _id: {type: String},
     phone: {type: String},
     email: {type: String},
-    nickname: {type: String}
+    nickname: {type: String},
+    avatarURL: {type: String},
+    isDefaultAvatar: {type: Boolean}
 })
 
 var user_timeline = new mongoose.Schema ({
+    _id: 0,
     account: {type: String},
+    userInfo: {type: {}},
     images: {type: Array},
     text: {type: String},
     timeStamp: {type: String},
-    repostCount: {type: String},
+    repostCount: 0,
     isRepost: {type: Boolean},
-    sourceTimeline: {type: {}},
+    repostTimeline: {type: {}},
     comments: {type: Array},
     liked: {type: Array}
 })
+
+var counter = new mongoose.Schema ({
+    _id: {type: String},
+    maxID: 0
+})
+
+var trackInfo = {
+    timeline: "timeline"
+}
 
 var user_friend = new mongoose.Schema ({
     _id: {type: String},
@@ -71,5 +84,7 @@ module.exports = {
     user_friend: mongoose.model('user_friend', user_friend),
     user_following: mongoose.model('user_following', user_following),
     user_gallery: mongoose.model('user_gallery', user_gallery),
-    user_position: mongoose.model('user_position', user_position)
+    user_position: mongoose.model('user_position', user_position),
+    counter: mongoose.model('counter', counter),
+    trackInfo: trackInfo
 }
