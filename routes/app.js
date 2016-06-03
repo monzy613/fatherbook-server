@@ -59,7 +59,9 @@ var statusCodeDictionary = {
     "670": ("取消点赞失败", false),
 
     "700": ("请求头像token成功", true),
-    "710": ("请求头像token失败", false)
+    "710": ("请求头像token失败", false),
+    "720": ("头像修改成功", true),
+    "730": ("头像修改失败", false)
 }
  */
 
@@ -200,11 +202,31 @@ router.post("/app.changeavatar", function(req, res, next) {
             res.send(status(710))
         } else {
             var filename = fbqn.avatarPrefix + "/" + account + ".jpeg"
-            models.user_info.update({'_id': account}, {$set: {avatarURL: filename, isDefaultAvatar: false}}, function(updateAvatarErr, updateAvatarDocs) {})
             res.send({
                 status: "700",
                 token: fbqn.getUploadInfo(filename),
                 filename: filename
+            })
+        }
+    })
+})
+
+router.post("/app.changeavatar.success", function(req, res, next) {
+    var account = req.body.account
+    models.user_info.find({'_id': account}, function(err, docs) {
+        if (err || docs.length === 0) {
+            res.send(status(730))
+        } else {
+            var filename = fbqn.avatarPrefix + "/" + account + ".jpeg"
+            models.user_info.update({'_id': account}, {$set: {avatarURL: filename, isDefaultAvatar: false}}, function(updateAvatarErr, updateAvatarDocs) {
+                if (!updateAvatarErr) {
+                    res.send({
+                        status: "720",
+                        filename: filename
+                    })
+                } else {
+                    res.send(status(730))
+                }
             })
         }
     })
@@ -249,6 +271,13 @@ router.post("/app.search.account", function (req, res, next) {
     // /app.search.account by acount
     var account = req.body.account
     var searchString = req.body.searchString
+    if (searchString === undefined || searchString === "") {
+        res.send({
+            status: "410",
+            error: "想拿到所有用户? 没门!"
+        })
+        return
+    }
     models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
         if (err) {
             console.log("/app.search.account error: " + err)
@@ -261,7 +290,7 @@ router.post("/app.search.account", function (req, res, next) {
             }
             if (docs.length === 0) {
                 res.send({
-                    "status": "410"
+                    status: "410"
                 })
                 return
             }
