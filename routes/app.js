@@ -466,13 +466,13 @@ router.post("/app.timeline.post", function(req, res, next) {
             }
             var timeStamp = Date.timeStamp()
             console.log(images)
-            models.counter.find({_id: models.trackInfo.timeline}, function(maxIDErr, maxIDDocs) {
-                if (maxIDErr || maxIDDocs.length === 0) {
+            models.counter.findOneAndUpdate({_id: models.trackInfo.timeline}, {$inc: {maxID: 1}}, function(maxIDErr, maxIDDocs) {
+                if (maxIDErr || maxIDDocs === undefined) {
                     console.log(err)
                     res.send(status(610))
                 } else {
-                    var newID = maxIDDocs[0].maxID + 1
-                    models.counter.update({_id: models.trackInfo.timeline}, {$set: {maxID: newID}}, function(updateMaxIDErr, updateMaxIDDocs) {})
+                    console.log(maxIDDocs)
+                    var newID = maxIDDocs.maxID + 1
                     var successJSON = {
                         success: "600",
                     }
