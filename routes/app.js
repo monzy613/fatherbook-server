@@ -462,7 +462,7 @@ router.post("/app.timeline.post", function(req, res, next) {
             var imageJSONString = req.body.images
             var images = []
             if (imageJSONString !== undefined) {
-                images = JSON.parse(req.body.imageJSONString)
+                images = JSON.parse( req.body.imageJSONString)
             }
             var timeStamp = Date.timeStamp()
             console.log(images)
@@ -628,6 +628,7 @@ router.get("/app.timeline.get", function(req, res, next) {
 router.get("/app.timeline.getByFollowing", function(req, res, next) {
     var account = req.query.account
     var maxID = req.query.maxID
+    var minID = req.query.minID
     var count = req.query.count
     if (account === undefined || account === "") {
         res.send(status(630))
@@ -642,7 +643,7 @@ router.get("/app.timeline.getByFollowing", function(req, res, next) {
             //onSuccess
             var accounts = getIDArray(follow_infos)
             accounts.push(account)
-            findTimelineByAccountArray(accounts, maxID, count, function(timelines) {
+            findTimelineByAccountArray(accounts, maxID, minID, count, function(timelines) {
                 res.send({
                     status: "620",
                     timelines: timelines
@@ -735,7 +736,7 @@ function findTimelineByAccount(account, onSuccess, onFailed) {
     })
 }
 
-function findTimelineByAccountArray(accounts, maxID, count, onSuccess, onFailed) {
+function findTimelineByAccountArray(accounts, maxID, minID, count, onSuccess, onFailed) {
     models.user_info.find({_id: {$in: accounts}}, function(findUserErr, userInfoDocs) {
         if (findUserErr || userInfoDocs.length === 0) {
             onFailed()
@@ -747,10 +748,33 @@ function findTimelineByAccountArray(accounts, maxID, count, onSuccess, onFailed)
                 $in: accounts
             }
         }
-        if (maxID > 0) {
+        if (maxID >= 0) {
             query._id = {
-                $lte: parseInt(maxID)
+                $lt: parseInt(maxID)
             }
+        }
+        if (minID >= 0) {
+            query._id = {
+                $gt: parseInt(minID)
+            }
+            models.user_timeline.find(query).sort({_id: -1}).exec(function (err, docs) {
+                if (err) {
+                    onFailed()
+                    return
+                }
+                if (docs.length === 0) {
+                    onSuccess([])
+                    return
+                }
+                onSuccess(docs.map(function (element) {
+                    element.__v = undefined
+                    element.userInfo = userInfoDocs.filter(function(userInfo) {
+                        return userInfo._id === element.account
+                    })[0]
+                    return element
+                }))
+            })
+            return
         }
         models.user_timeline.find(query).sort({_id: -1}).limit(size).exec(function (err, docs) {
             if (err) {
