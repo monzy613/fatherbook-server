@@ -462,10 +462,9 @@ router.post("/app.timeline.post", function(req, res, next) {
             var imageJSONString = req.body.images
             var images = []
             if (imageJSONString !== undefined) {
-                images = JSON.parse( req.body.imageJSONString)
+                images = JSON.parse(imageJSONString)
             }
             var timeStamp = Date.timeStamp()
-            console.log(images)
             models.counter.findOneAndUpdate({_id: models.trackInfo.timeline}, {$inc: {maxID: 1}}, function(maxIDErr, maxIDDocs) {
                 if (maxIDErr || maxIDDocs === undefined) {
                     console.log(err)
@@ -475,16 +474,18 @@ router.post("/app.timeline.post", function(req, res, next) {
                     var newID = maxIDDocs.maxID + 1
                     var successJSON = {
                         success: "600",
+                        _id: newID
                     }
                     if (images.length !== 0) {
                         var tokenArray = []
-                        for (var i = 0;i < images.length; i += 1) {
-                            var index = images[i].index
+                        for (var i = 0;i < images[0].length; i += 1) {
+                            var index = images[0][i].index
                             var absoluteURL  = imageURL(newID, index)
-                            images[i].absoluteURL = absoluteURL
+                            images[0][i].url = absoluteURL
                             tokenArray.push({
                                 index: index,
-                                token: qn.getUploadInfo(absoluteURL)
+                                token: fbqn.getUploadInfo(absoluteURL),
+                                filename: absoluteURL
                             })
                         }
                         successJSON.tokens = tokenArray
@@ -494,7 +495,7 @@ router.post("/app.timeline.post", function(req, res, next) {
                         account: account,
                         userInfo: docs[0],
                         text: text,
-                        images: images,
+                        images: images[0],
                         timeStamp: timeStamp,
                         repostCount: 0,
                         isRepost: false,
