@@ -59,7 +59,9 @@ var statusCodeDictionary = {
     "670": ("取消点赞失败", false),
 
     "700": ("请求头像token成功", true),
-    "710": ("请求头像token失败", false)
+    "710": ("请求头像token失败", false),
+    "720": ("头像修改成功", true),
+    "730": ("头像修改失败", false)
 }
  */
 
@@ -200,11 +202,31 @@ router.post("/app.changeavatar", function(req, res, next) {
             res.send(status(710))
         } else {
             var filename = fbqn.avatarPrefix + "/" + account + ".jpeg"
-            models.user_info.update({'_id': account}, {$set: {avatarURL: filename, isDefaultAvatar: false}}, function(updateAvatarErr, updateAvatarDocs) {})
             res.send({
                 status: "700",
                 token: fbqn.getUploadInfo(filename),
                 filename: filename
+            })
+        }
+    })
+})
+
+router.post("/app.changeavatar.success", function(req, res, next) {
+    var account = req.body.account
+    models.user_info.find({'_id': account}, function(err, docs) {
+        if (err || docs.length === 0) {
+            res.send(status(730))
+        } else {
+            var filename = fbqn.avatarPrefix + "/" + account + ".jpeg"
+            models.user_info.update({'_id': account}, {$set: {avatarURL: filename, isDefaultAvatar: false}}, function(updateAvatarErr, updateAvatarDocs) {
+                if (!updateAvatarErr) {
+                    res.send({
+                        status: "720",
+                        filename: filename
+                    })
+                } else {
+                    res.send(status(730))
+                }
             })
         }
     })
@@ -249,6 +271,13 @@ router.post("/app.search.account", function (req, res, next) {
     // /app.search.account by acount
     var account = req.body.account
     var searchString = req.body.searchString
+    if (searchString === undefined || searchString === "") {
+        res.send({
+            status: "410",
+            error: "想拿到所有用户? 没门!"
+        })
+        return
+    }
     models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
         if (err) {
             console.log("/app.search.account error: " + err)
@@ -261,7 +290,7 @@ router.post("/app.search.account", function (req, res, next) {
             }
             if (docs.length === 0) {
                 res.send({
-                    "status": "410"
+                    status: "410"
                 })
                 return
             }
@@ -433,17 +462,17 @@ router.post("/app.timeline.post", function(req, res, next) {
             var imageJSONString = req.body.images
             var images = []
             if (imageJSONString !== undefined) {
-                images = JSON.parse(req.body.imageJSONString)
+                images = JSON.parse( req.body.imageJSONString)
             }
             var timeStamp = Date.timeStamp()
             console.log(images)
-            models.counter.find({_id: models.trackInfo.timeline}, function(maxIDErr, maxIDDocs) {
-                if (maxIDErr || maxIDDocs.length === 0) {
+            models.counter.findOneAndUpdate({_id: models.trackInfo.timeline}, {$inc: {maxID: 1}}, function(maxIDErr, maxIDDocs) {
+                if (maxIDErr || maxIDDocs === undefined) {
                     console.log(err)
                     res.send(status(610))
                 } else {
-                    var newID = maxIDDocs[0].maxID + 1
-                    models.counter.update({_id: models.trackInfo.timeline}, {$set: {maxID: newID}}, function(updateMaxIDErr, updateMaxIDDocs) {})
+                    console.log(maxIDDocs)
+                    var newID = maxIDDocs.maxID + 1
                     var successJSON = {
                         success: "600",
                     }
@@ -599,6 +628,7 @@ router.get("/app.timeline.get", function(req, res, next) {
 router.get("/app.timeline.getByFollowing", function(req, res, next) {
     var account = req.query.account
     var maxID = req.query.maxID
+    var minID = req.query.minID
     var count = req.query.count
     if (account === undefined || account === "") {
         res.send(status(630))
@@ -613,7 +643,7 @@ router.get("/app.timeline.getByFollowing", function(req, res, next) {
             //onSuccess
             var accounts = getIDArray(follow_infos)
             accounts.push(account)
-            findTimelineByAccountArray(accounts, maxID, count, function(timelines) {
+            findTimelineByAccountArray(accounts, maxID, minID, count, function(timelines) {
                 res.send({
                     status: "620",
                     timelines: timelines
@@ -706,7 +736,7 @@ function findTimelineByAccount(account, onSuccess, onFailed) {
     })
 }
 
-function findTimelineByAccountArray(accounts, maxID, count, onSuccess, onFailed) {
+function findTimelineByAccountArray(accounts, maxID, minID, count, onSuccess, onFailed) {
     models.user_info.find({_id: {$in: accounts}}, function(findUserErr, userInfoDocs) {
         if (findUserErr || userInfoDocs.length === 0) {
             onFailed()
@@ -718,10 +748,33 @@ function findTimelineByAccountArray(accounts, maxID, count, onSuccess, onFailed)
                 $in: accounts
             }
         }
-        if (maxID > 0) {
+        if (maxID >= 0) {
             query._id = {
-                $lte: parseInt(maxID)
+                $lt: parseInt(maxID)
             }
+        }
+        if (minID >= 0) {
+            query._id = {
+                $gt: parseInt(minID)
+            }
+            models.user_timeline.find(query).sort({_id: -1}).exec(function (err, docs) {
+                if (err) {
+                    onFailed()
+                    return
+                }
+                if (docs.length === 0) {
+                    onSuccess([])
+                    return
+                }
+                onSuccess(docs.map(function (element) {
+                    element.__v = undefined
+                    element.userInfo = userInfoDocs.filter(function(userInfo) {
+                        return userInfo._id === element.account
+                    })[0]
+                    return element
+                }))
+            })
+            return
         }
         models.user_timeline.find(query).sort({_id: -1}).limit(size).exec(function (err, docs) {
             if (err) {
