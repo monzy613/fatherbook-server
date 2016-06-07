@@ -462,7 +462,15 @@ router.post("/app.timeline.post", function(req, res, next) {
             var imageJSONString = req.body.images
             var images = []
             if (imageJSONString !== undefined) {
-                images = JSON.parse(imageJSONString)
+                try {
+                    images = JSON.parse(imageJSONString)
+                } catch (e) {
+                    res.send({
+                        status: 610,
+                        error: "images not a json string"
+                    })
+                    return
+                }
             }
             var timeStamp = Date.timeStamp()
             models.counter.findOneAndUpdate({_id: models.trackInfo.timeline}, {$inc: {maxID: 1}}, function(maxIDErr, maxIDDocs) {
