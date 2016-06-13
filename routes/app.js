@@ -51,7 +51,7 @@ var statusCodeDictionary = {
     "610": ("timeline 发送失败", false),
     "620": ("timeline 获取成功", true),
     "630": ("timeline 获取失败", false),
-    "650": ("查无此人", false),
+    "635": ("查无此人", false),
 
     "640": ("点赞成功", true),
     "650": ("点赞失败", false),
@@ -61,7 +61,14 @@ var statusCodeDictionary = {
     "700": ("请求头像token成功", true),
     "710": ("请求头像token失败", false),
     "720": ("头像修改成功", true),
-    "730": ("头像修改失败", false)
+    "730": ("头像修改失败", false),
+
+    "740": ("评论成功", true),
+    "750": ("评论失败, timeline不存在", false),
+    "770": ("评论失败", false),
+
+    "780": ("获取评论列表成功", true),
+    "790": ("获取评论列表失败", false),
 }
  */
 
@@ -449,6 +456,80 @@ router.post("/app.friend.follow", function (req, res, next) {
  comments: {type: Array},
  liked: {type: Array}
 * */
+
+/*
+* comment :
+* content
+* timeStamp
+* userInfo
+* */
+
+router.get("/app.timeline.comment", function(req, res, next) {
+    var timelineID = parseInt(req.query.timelineID.toString())
+    if (timelineID === NaN) {
+        res.send(status(790))
+        return
+    }
+    //models.user_timeline.find(query).sort({_id: -1}).exec(function (err, docs) {
+    models.user_comment.find({timelineID: timelineID}).sort({timeStamp: 1}).exec(function(err, docs) {
+    //models.user_comment.find({timelineID: timelineID}, function(err, docs) {
+        if (err) {
+            res.send(status(790))
+        } else {
+            res.send({
+                status: 780,
+                comments: docs.map(function(element) {
+                    element.__v = undefined
+                    element._id = undefined
+                    return element
+                })
+            })
+        }
+    })
+})
+
+router.post("/app.timeline.comment", function(req, res, next) {
+    var account = req.body.account
+    var timelineID = parseInt(req.body.timelineID.toString())
+    if (timelineID === NaN) {
+        res.send(status(750))
+        return
+    }
+    models.user_info.find({_id: account}, function(err, docs) {
+        if (err || docs.length === 0) {
+            console.log("/app.timeline.comment error1: " + err)
+            res.send(status(770))
+        } else {
+            models.user_timeline.find({_id: timelineID}, function(tErr, tDocs) {
+                if (tErr || tDocs.length === 0) {
+                    if (tDocs.length === 0) {
+                        console.log("timeline " + timelineID + " do not exist")
+                    }
+                    res.send(status(750))
+                } else {
+                    var timeStamp = Date.timeStamp()
+                    var newCommentCount = tDocs[0].commentCount + 1
+                    var content = req.body.content
+                    models.user_timeline.update({_id: timelineID}, {$set: {commentCount: newCommentCount}}, function (uErr, uDocs) {})
+                    var comment = new models.user_comment({
+                        timelineID: timelineID,
+                        content: content,
+                        timeStamp: timeStamp.toString(),
+                        userInfo: docs[0]
+                    })
+                    comment.save(function(saveErr, saveDocs) {
+                        if (saveErr) {
+                            res.send(status(770))
+                        } else {
+                            res.send(status(740))
+                        }
+                    })
+                }
+            })
+        }
+    })
+})
+
 router.post("/app.timeline.post", function(req, res, next) {
     var account = req.body.account
     var password = req.body.password
@@ -531,7 +612,7 @@ router.post("/app.timeline.like", function(req, res, next) {
     models.user_info.find({_id: account}, function(userInfoError, userInfoDocs) {
         if (userInfoError || userInfoDocs.length === 0) {
             res.send({
-                status: "650",
+                status: "635",
                 error: userInfoError
             })
         } else {
