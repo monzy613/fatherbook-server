@@ -29,8 +29,15 @@ var user_timeline = new mongoose.Schema ({
     repostCount: 0,
     isRepost: {type: Boolean},
     repostTimeline: {type: {}},
-    comments: {type: Array},
+    commentCount: 0,
     liked: {type: Array}
+})
+
+var user_comment = new mongoose.Schema ({
+    timelineID: 0,
+    timeStamp: {type: String},
+    content: {type: String},
+    userInfo: {type: {}}
 })
 
 var counter = new mongoose.Schema ({
@@ -85,6 +92,7 @@ module.exports = {
     user_following: mongoose.model('user_following', user_following),
     user_gallery: mongoose.model('user_gallery', user_gallery),
     user_position: mongoose.model('user_position', user_position),
+    user_comment: mongoose.model('user_comment', user_comment),
     counter: mongoose.model('counter', counter),
     trackInfo: trackInfo
 }
