@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+  	<link rel='icon' href='../public/images/logo.ico ' type=‘image/x-ico’ /> 
     <meta charset="utf-8">
     <title>Facebook</title>
-    	<link href="../public/stylesheets/bootstrap.css" rel="stylesheet">
+    <link href="../public/stylesheets/bootstrap.css" rel="stylesheet">
+   <script src="../public/js/jquery.min.js"></script>
+   <script src="../public/js/bootstrap.min.js"></script>
+    	
     <style type="text/css">
       /* Override some defaults */
       html, body {
@@ -98,33 +102,112 @@
 			<div class="style_1">
 				<form method="get" id="searchform" action="">
 					<fieldset>
-						<input id="s" name="s" type="text" value="搜索用户" class="text_input" onblur="if(this.value==''){this.value='Enter Keyword';}" onfocus="if(this.value =='Enter Keyword') {this.value=''; }" />
+						<input id="s" name="s" type="text" value="搜索用户" class="text_input" onblur="if(this.value==''){this.value='搜索用户';}" onfocus="if(this.value =='搜索用户') {this.value=''; }" />
 						<input name="submit" type="submit" value /> </fieldset>
 				</form>
 			</div>
+			
           </ul>
-
+          <ul class="nav" style="float:right;">
+		 	<li class="dropdown">
+		        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><img src="../public/images/user.png" />本书编写组 <span class="caret"></span></a>
+		            <ul class="dropdown-menu">
+		                <li><a href="#">主页</a></li>
+		                <li><a href="#">个人信息</a></li>
+		                <li><a href="#">退出登录</a></li>
+		            </ul>
+		    </li>
+		 </ul>
+		          	
         </div>
       </div>
     </div>
 
-    <div class="container">
+<div class="container-fluid">
+      <div class="sidebar">
+  
+          <h5>
+          <ul style="list-style-type:none">
+            <li><a href="#"><img src="../public/images/head.png" style="width:20px;height:20px;vertical-align:text-bottom"/>&nbsp;本书编写组</a></li><br>
+            <li><a href="#"><img src="../public/images/msg.png" style="width:20px;height:20px;vertical-align:text-bottom""/>&nbsp;消息</a></li><br>
+            <li><a href="#"><img src="../public/images/info.png" style="width:20px;height:20px;vertical-align:text-bottom""/>&nbsp;编辑资料</a></li><br>
+            <li><a href="#"><img src="../public/images/search.png" style="width:20px;height:20px;vertical-align:text-bottom""/>&nbsp;搜索好友</a></li><br>
+          </ul>
+          </h5>
+         
+      
+      </div>
+      
+      <div class="middlebar">
+	      <div class="well">
+	    	  发布新鲜事<br><br>
+	      	<textarea rows="5" cols="60" maxlength="140" style="width: 100%" placeholder="限制140字以内..."></textarea>
+	      	<br><br>
+	      	<div class="row">
+		      	<div class="span5">
+			      	<input type="file" id="file_input"/>
+			    	<div id="result">
+			          <!-- 这里用来显示读取结果 -->
+			    	</div> 
+		      	</div>
+		      	<div align="right" class="span5">
+			      	<button class="btn primary">发布</button>	      	
+		      	</div>
+	      	</div>
+	      	
+	      	
+	      </div>
+		
+	      <div class="well">
+	      	<div class="row">
+	      		<div class="span1">
+	      			<img src="../public/images/head.png" style="width:40px;height:40px;"/>
+	      		</div>
 
-      <div class="content">
-
-        <div class="row">
-          <div class="span4">
-            <h2>Main content</h2>
-          </div>
-   
-        </div>
+	      		<div class="span9" style="word-wrap: break-word;word-break:break-all;">
+	      			<h5>本书编写组</h5>
+	      			<h6>40分钟前</h6>
+	      			111111111111111111111111111111111111111111111111111111111111111111111111111111
+	      			<img src="../public/images/test.jpg" style="width:300px;height:200px;"/>
+	      		</div>
+	      		
+	      	</div>
+	      </div>
+	      
+      </div>
+      
+      <div class="rightbar">
+      	<div class="well" style="float:middle;">
+	     <img src="../public/images/head.png" style="width:40px;height:40px;"/>
+		</div>
+		<div><div class="attribution">Copyright © 2016 SOA项目组</div></div>
       </div>
 
-      <footer>
-        <p>&copy; Father 2016</p>
-      </footer>
-
-    </div> <!-- /container -->
+    </div>
+	<script type="text/javascript">
+	var result = document.getElementById("result");
+	var input = document.getElementById("file_input");
+	
+	if(typeof FileReader === 'undefined'){
+		result.innerHTML = "抱歉，你的浏览器不支持 FileReader";
+		input.setAttribute('disabled','disabled');
+	}else{
+		input.addEventListener('change',readFile,false);
+	}
+				
+	function readFile(){
+		var file = this.files[0];
+		if(!/image\/\w+/.test(file.type)){
+			alert("请确保文件为图像类型");
+			return false;
+		}
+		var reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onload = function(e){
+			result.innerHTML = '<img src="'+this.result+'" alt="" style="width:100px;length:100px;"/>'
+		}
+	}
+	</script>
 
   </body>
 </html>
