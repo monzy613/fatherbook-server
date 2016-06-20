@@ -757,6 +757,12 @@ router.get("/app.timeline.following", function(req, res, next) {
     }
 })
 
+router.get("/app.text", function(req, res, next) {
+    findTimelineByAccount(req.query.account, function(timelines) {
+        res.send(timelines)
+    })
+})
+
 function queryFollowing(account, onSuccess, onFailed) {
     models.user_following.find({_id: account}, function (err, docs) {
         if (err) {
@@ -784,12 +790,6 @@ function queryFollowing(account, onSuccess, onFailed) {
         })
     })
 }
-
-router.get("/app.text", function(req, res, next) {
-    findTimelineByAccount(req.query.account, function(timelines) {
-        res.send(timelines)
-    })
-})
 
 function findTimelineByAccount(account, onSuccess, onFailed) {
     models.user_timeline.find({account: account}).sort({_id: -1}).limit(5).exec(function(err, docs) {
