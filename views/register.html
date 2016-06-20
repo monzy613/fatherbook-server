@@ -5,15 +5,15 @@
     <title>Facebook</title>
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel='icon' href='../public/images/logo.ico ' type=‘image/x-ico’ /> 
-	<link href="../public/stylesheets/bootstrap.min.css" rel="stylesheet">
-	<link href="../public/stylesheets/bootstrapDatepickr-1.0.0.css" rel="stylesheet">
-	<link href="../public/stylesheets/bootstrap.css" rel="stylesheet">
-    <link href="../public/stylesheets/docs.css" rel="stylesheet">
-    <link href="../public/stylesheets/prettify.css" rel="stylesheet">
-	<script src="../public/js/jquery-1.7.2.min.js"></script>
-	<script src="../public/js/bootstrap.min.js"></script>
-	<script src="../public/js/bootstrapDatepickr-1.0.0.min.js"></script>
+    <link rel='icon' href='./images/logo.ico ' type=‘image/x-ico’ />
+	<link href="./stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link href="./stylesheets/bootstrapDatepickr-1.0.0.css" rel="stylesheet">
+	<link href="./stylesheets/bootstrap.css" rel="stylesheet">
+    <link href="./stylesheets/docs.css" rel="stylesheet">
+    <link href="./stylesheets/prettify.css" rel="stylesheet">
+	<script src="./js/jquery-1.7.2.min.js"></script>
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="./js/bootstrapDatepickr-1.0.0.min.js"></script>
 	
 	<script>
 		$(document).ready(function() {
@@ -66,51 +66,31 @@
 				</br></br>
 				<div class="row">
 					<div class="span12">
-						<form id="myform">
+						<form id="myform" action="/register" method="post">
 							<div class="clearfix" id="usernamediv">
 								<label>昵称</label>
 								<div class="input">
-									<input class="xlarge" id="username" size="30" type="text">
+									<input class="xlarge" id="username" name="nickname" size="30" type="text">
 								</div>
 							</div><!-- /clearfix -->
 		          
 							<div class="clearfix" id="phonediv">
-								<label>手机号或邮箱</label>
+								<label>账号</label>
 								<div class="input">
-									<input class="xlarge" id="phone" size="30" type="text">
+									<input class="xlarge" id="phone" name="account" size="30" type="text">
 								</div>
 							</div><!-- /clearfix -->
 		          
 							<div class="clearfix" id="passworddiv">
 								<label>密码</label>
 								<div class="input">
-									<input class="xlarge" id="password" size="30" type="text">
-								</div>
-							</div><!-- /clearfix -->
-
-							<div class="clearfix" id="birthdaydiv">
-								<label>生日</label>
-								<div class="input">
-									<input type="text" id="birthday" class="xlarge" >
-								</div>
-							</div><!-- /clearfix -->
-		         
-							<div class="clearfix" id="genderdiv">
-								<label>性别</label>
-								<div class="input" id="gender">
-									<label style="width:50px;text-align:left">
-										<input type="radio" value="male">男
-									</label>
-									<label style="width:50px;text-align:left">
-										<input type="radio" value="female">女
-									</label>
+									<input class="xlarge" id="password" name="password" size="30" type="password">
 								</div>
 							</div><!-- /clearfix -->
 				  
 				  			<div class="clearfix" style="text-align:center">
 								</br></br> </br></br>
-								<a href="#" type="submit" class="btn large primary" onclick="check()">注&nbsp;&nbsp;册</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-							
+								<input type="submit" name="" value="注 册" class="btn large primary" onclick="check()" />
 							</div>
 						</form>
 					</div>
@@ -126,31 +106,13 @@
 			var name=document.getElementById('username').value;//用户名
 			var phone=document.getElementById('phone').value;//用户名
 			var pw=document.getElementById('password').value;//用户名
-			var bd=document.getElementById('birthday').value;//用户名
-			var gender = document.getElementById("gender").getElementsByTagName("input");//获取单选框集合
 
-			if(name==""){
-				document.getElementById( "usernamediv" ).className = "clearfix error"; 
-			}
 			if(phone==""){
-				document.getElementById( "phonediv" ).className = "clearfix error"; 
+				document.getElementById( "phonediv" ).className = "clearfix error";
 			}
 			if(pw==""){
 				document.getElementById( "passworddiv" ).className = "clearfix error"; 
 			}
-			if(bd==""){
-				document.getElementById( "birthdaydiv" ).className = "clearfix error"; 
-			}
-			
-			for (var i = 0; i < gender.length; i++){
-	            if (gender[i].checked == true) {
-	                flag = 1;
-	                break;
-	            }
-			}
-	        	if (!flag) {
-	        		document.getElementById( "genderdiv" ).className = "clearfix error"; 
-				}
 		}
 		
 	</script>
