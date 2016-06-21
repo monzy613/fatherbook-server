@@ -365,8 +365,8 @@ router.post("/app.friend.unfollow", function(req, res, next) {
                 break
             }
         }
-        models.user_info.findOneAndUpdate({_id: account}, {$dec: {following: 1}}, function(err, docs) {})
-        models.user_info.findOneAndUpdate({_id: targetID}, {$dec: {follower: 1}}, function(err, docs) {})
+        models.user_info.findOneAndUpdate({_id: account}, {$inc: {following: -1}}, function(err, docs) {})
+        models.user_info.findOneAndUpdate({_id: targetID}, {$inc: {follower: -1}}, function(err, docs) {})
         models.user_following.update({_id: account}, {$set: {follow_infos: follow_infos}}, function(err, docs){
             if (err) {
                 console.log("unfollow failed")
