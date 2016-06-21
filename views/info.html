@@ -3,7 +3,7 @@
   <head>
   	<link rel='icon' href='./images/logo.ico ' type=‘image/x-ico’ />
     <meta charset="utf-8">
-    <title>Facebook</title>
+    <title>Facebook-个人信息</title>
     <link href="./stylesheets/bootstrap.css" rel="stylesheet">
    <script src="./js/jquery.min.js"></script>
    <script src="./js/bootstrap.min.js"></script>
@@ -111,7 +111,7 @@
           </ul>
           <ul class="nav" style="float:right;">
 		 	<li class="dropdown">
-		        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><img src="./images/user.png" />{{myInfo.nickname}} <span class="caret"></span></a>
+		        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><img src="./images/user.png" />{{myInfo.nickname}}<span class="caret"></span></a>
 		            <ul class="dropdown-menu">
 		                <li><a href="#">主页</a></li>
 		                <li><a href="#">个人信息</a></li>
@@ -141,42 +141,34 @@
       </div>
       
       <div class="middlebar">
-	      <div class="well">
-		      <form method="post" id="newsform" action="">
-		    	  发布新鲜事<br><br>
-		      	<textarea id="newscontent" rows="5" cols="60" maxlength="140" style="width: 100%" placeholder="限制140字以内..."></textarea>
-		      	<br><br>
-		      	<div class="row">
-			      	<div class="span5">
-				      	<input type="file" id="file_input"/>
-				    	<div id="result">
-				          <!-- 这里用来显示读取结果 -->
-				    	</div> 
-			      	</div>
-			      	<div align="right" class="span5">
-						<input type="HIDDEN" name="fromID" value={{myInfo.nickname}}/>
-				      	<button class="btn primary" type="submit">发布</button>	      	
-			      	</div>
-		      	</div>
-		      </form>
+      
+
+	      <div class="well" id="changeinfomation">
+			<h2>编辑资料</h2><hr>
+			<form id="changeInfo" action="" method="post">
+			<div class="row">
+				<div class="span1" style="color:#fff">1</div>
+				<div class="span3" id="result">
+		      	    {% if {{myInfo.isDefaultAvatar}} %}
+						<img src="./images/head.png" style="width:80px;height:80px;"/>
+	 				{% else %}
+		      			<img src="http://o7b20it1b.bkt.clouddn.com/{{myInfo.avatarURL}}" style="width:80px;height:80px;"/>
+		      		{% endif %}
+				</div>
+				<div class="span6" style="  font-size: 15px;font-weight: bold;">
+					账号：<input class="xlarge disabled" id="userID" name="disabledInput" style="height:25px;width:160px;" type="text" value={{myInfo._id}} disabled="">
+					<br><br><br><br>
+					昵称：<input class="xlarge" id="userName" name="xlInput" style="height:25px;width:160px;" type="text" value={{myInfo.nickname}}>
+					<br><br><br><br>
+			    	修改头像：<br><br>
+			    	<input type="file" id="file_input"/>
+			    	<br><br><br><br>
+					<button type="submit" class="btn large primary">保存修改</button>
+				</div>
+				</form>
+			</div>
+				
 	      </div>
-		
-		  {% for timeline in timelines %}
-	      <div class="well">
-	      	<div class="row">
-	      		<div class="span1">
-	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.userInfo.avatarURL}}" style="width:40px;height:40px;"/>
-	      		</div>
-	      		<div class="span9" style="word-wrap: break-word;word-break:break-all;">
-	      			<h5>{{timeline.userInfo.nickname}}</h5>
-	      			{{timeline.text}}
-					{% if timeline.images.length > 0 %}
-	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.images[0].url}}" style="width:300px;height:200px;"/>
-					{% endif %}
-	      		</div>
-	      	</div>
-	      </div>
-		  {% endfor %}
 	      
       </div>
       
@@ -227,6 +219,6 @@
 		}
 	}
 	</script>
-
+	
   </body>
 </html>

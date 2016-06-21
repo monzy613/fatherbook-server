@@ -3,7 +3,7 @@
   <head>
   	<link rel='icon' href='./images/logo.ico ' type=‘image/x-ico’ />
     <meta charset="utf-8">
-    <title>Facebook</title>
+    <title>Facebook-搜索</title>
     <link href="./stylesheets/bootstrap.css" rel="stylesheet">
    <script src="./js/jquery.min.js"></script>
    <script src="./js/bootstrap.min.js"></script>
@@ -141,42 +141,31 @@
       </div>
       
       <div class="middlebar">
-	      <div class="well">
-		      <form method="post" id="newsform" action="">
-		    	  发布新鲜事<br><br>
-		      	<textarea id="newscontent" rows="5" cols="60" maxlength="140" style="width: 100%" placeholder="限制140字以内..."></textarea>
-		      	<br><br>
-		      	<div class="row">
-			      	<div class="span5">
-				      	<input type="file" id="file_input"/>
-				    	<div id="result">
-				          <!-- 这里用来显示读取结果 -->
-				    	</div> 
-			      	</div>
-			      	<div align="right" class="span5">
-						<input type="HIDDEN" name="fromID" value={{myInfo.nickname}}/>
-				      	<button class="btn primary" type="submit">发布</button>	      	
-			      	</div>
-		      	</div>
-		      </form>
-	      </div>
 		
-		  {% for timeline in timelines %}
-	      <div class="well">
-	      	<div class="row">
-	      		<div class="span1">
-	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.userInfo.avatarURL}}" style="width:40px;height:40px;"/>
-	      		</div>
-	      		<div class="span9" style="word-wrap: break-word;word-break:break-all;">
-	      			<h5>{{timeline.userInfo.nickname}}</h5>
-	      			{{timeline.text}}
-					{% if timeline.images.length > 0 %}
-	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.images[0].url}}" style="width:300px;height:200px;"/>
-					{% endif %}
-	      		</div>
-	      	</div>
+	      <div class="well" id="change">
+			<!-- 生成一个一个的用户信息块【包含昵称、头像、关注数、粉丝数、微博数】 -->
+			<h2>搜索结果</h2><hr>
+			{% for user in users %}
+				<div class="row" id="change">
+					<div class="span1">
+		      	    	{% if {{user.isDefaultAvatar}} %}
+							<img src="./images/head.png" style="width:80px;height:80px;"/>
+	 					{% else %}
+		      				<img src="http://o7b20it1b.bkt.clouddn.com/{{user.avatarURL}}" style="width:80px;height:80px;"/>
+		      			{% endif %}
+					</div>
+					<div class="span7" style="word-wrap: break-word;word-break:break-all;">
+						<h5><a href="#">{{user.nickname}}</a></h5>
+						<h6>关注数：1024&nbsp;&nbsp;粉丝数：1024&nbsp;&nbsp;内容数：1024</h6>
+					</div>
+					<div class="span2">
+						<a href="#" class="btn small">+关注</a>
+					</div>
+				</div>
+				<hr>';
+			{% endfor %}
+			
 	      </div>
-		  {% endfor %}
 	      
       </div>
       
@@ -223,7 +212,7 @@
 		var reader = new FileReader();
 		reader.readAsDataURL(file);
 		reader.onload = function(e){
-			result.innerHTML = '<img id="newspic" src="'+this.result+'" alt="" style="width:100px;length:100px;"/>'
+			result.innerHTML = '<img src="'+this.result+'" alt="" style="width:100px;length:100px;"/>'
 		}
 	}
 	</script>

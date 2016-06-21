@@ -141,42 +141,20 @@
       </div>
       
       <div class="middlebar">
-	      <div class="well">
-		      <form method="post" id="newsform" action="">
-		    	  发布新鲜事<br><br>
-		      	<textarea id="newscontent" rows="5" cols="60" maxlength="140" style="width: 100%" placeholder="限制140字以内..."></textarea>
-		      	<br><br>
-		      	<div class="row">
-			      	<div class="span5">
-				      	<input type="file" id="file_input"/>
-				    	<div id="result">
-				          <!-- 这里用来显示读取结果 -->
-				    	</div> 
-			      	</div>
-			      	<div align="right" class="span5">
-						<input type="HIDDEN" name="fromID" value={{myInfo.nickname}}/>
-				      	<button class="btn primary" type="submit">发布</button>	      	
-			      	</div>
-		      	</div>
-		      </form>
-	      </div>
-		
-		  {% for timeline in timelines %}
+
 	      <div class="well">
 	      	<div class="row">
 	      		<div class="span1">
-	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.userInfo.avatarURL}}" style="width:40px;height:40px;"/>
+	      			<img src="./images/head.png" style="width:40px;height:40px;"/>
 	      		</div>
 	      		<div class="span9" style="word-wrap: break-word;word-break:break-all;">
-	      			<h5>{{timeline.userInfo.nickname}}</h5>
-	      			{{timeline.text}}
-					{% if timeline.images.length > 0 %}
-	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.images[0].url}}" style="width:300px;height:200px;"/>
-					{% endif %}
+	      			<h5>别人的账号</h5>
+	      			<h6>40分钟前</h6>
+	      			111111111111111111111111111111111111111111111111111111111111111111111111111111
+	      			<img src="./images/test.jpg" style="width:300px;height:200px;"/>
 	      		</div>
 	      	</div>
 	      </div>
-		  {% endfor %}
 	      
       </div>
       
@@ -203,30 +181,6 @@
       </div>
 
     </div>
-	<script type="text/javascript">
-	var result = document.getElementById("result");
-	var input = document.getElementById("file_input");
-	
-	if(typeof FileReader === 'undefined'){
-		result.innerHTML = "抱歉，你的浏览器不支持 FileReader";
-		input.setAttribute('disabled','disabled');
-	}else{
-		input.addEventListener('change',readFile,false);
-	}
-				
-	function readFile(){
-		var file = this.files[0];
-		if(!/image\/\w+/.test(file.type)){
-			alert("请确保文件为图像类型");
-			return false;
-		}
-		var reader = new FileReader();
-		reader.readAsDataURL(file);
-		reader.onload = function(e){
-			result.innerHTML = '<img id="newspic" src="'+this.result+'" alt="" style="width:100px;length:100px;"/>'
-		}
-	}
-	</script>
 
   </body>
 </html>
