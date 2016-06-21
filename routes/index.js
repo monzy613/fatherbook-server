@@ -48,37 +48,35 @@ router.post("/login", function (req, res, next) {
                 var userInfo = {
                     "account": account
                 }
-                models.user_info.find({_id: account}, function (err, docs) {
+
+                var maxID = req.query.maxID
+                var minID = req.query.minID
+                var count = req.query.count
+                if (account === undefined || account === "") {
+                    res.send(status(630))
+                    return
+                }
+                models.user_info.find({_id: account}, function(err, docs) {
                     if (err || docs.length === 0) {
-                        res.send(status(210));
+                        res.send(status(630))
                         return
                     }
-                    queryFollowing(account, function(arr){
+                    queryFollowing(account, function(follow_infos){
                         //onSuccess
-                        userInfo = {
-                            account: account,
-                            phone: docs[0]["phone"],
-                            email: docs[0]["email"],
-                            nickname: docs[0]["nickname"],
-                            avatarURL: docs[0]["avatarURL"],
-                            isDefaultAvatar: docs[0]["isDefaultAvatar"],
-                            follow_infos: arr
-                        }
-                        res.render("index")
-                        return
-                        res.send({
-                            "status": "200",
-                            "userInfo": userInfo,
-                            "config": {
-                                "rcAppkey": config.rcAppkey,
-                                "rcAppSecret": config.rcAppSecret,
-                                "qnBucketDomain": config.qnBucketDomain
-                            }
+                        var accounts = getIDArray(follow_infos)
+                        accounts.push(account)
+                        findTimelineByAccountArray(accounts, maxID, minID, count, function(timelines) {
+                            res.render("index", {
+                                userInfo: docs[0],
+                                timelines: timelines
+                            })
+                        }, function() {
+                            //failed
+                            res.send(status(630))
                         })
                     }, function(){
                         //onFailed
-                        console.log("onFailed")
-                        res.send(status(210))
+                        res.send(status(630))
                     })
                 })
             }

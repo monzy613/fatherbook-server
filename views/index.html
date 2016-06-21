@@ -3,7 +3,7 @@
   <head>
   	<link rel='icon' href='./images/logo.ico ' type=‘image/x-ico’ />
     <meta charset="utf-8">
-    <title>Facebook</title>
+    <title>SOA</title>
     <link href="./stylesheets/bootstrap.css" rel="stylesheet">
    <script src="./js/jquery.min.js"></script>
    <script src="./js/bootstrap.min.js"></script>
@@ -97,7 +97,7 @@
     <div class="topbar">
       <div class="fill">
         <div class="container">
-          <a class="brand" href="#">Facebook</a>
+          <a class="brand" href="#">SOA</a>
           <ul class="nav">
 			<div class="style_1">
 				<form method="get" id="searchform" action="">
@@ -157,22 +157,24 @@
 	      	
 	      	
 	      </div>
+
+		  {% for timeline in timelines %}
 		
 	      <div class="well">
 	      	<div class="row">
 	      		<div class="span1">
-	      			<img src="./images/head.png" style="width:40px;height:40px;"/>
+	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.userInfo.avatarURL}}" style="width:40px;height:40px;"/>
 	      		</div>
-
 	      		<div class="span9" style="word-wrap: break-word;word-break:break-all;">
-	      			<h5>本书编写组</h5>
-	      			<h6>40分钟前</h6>
-	      			111111111111111111111111111111111111111111111111111111111111111111111111111111
-	      			<img src="./images/test.jpg" style="width:300px;height:200px;"/>
+	      			<h5>{{timeline.userInfo.nickname}}</h5>
+	      			{{timeline.text}}
+					{% if timeline.images.length > 0 %}
+	      			<img src="http://o7b20it1b.bkt.clouddn.com/{{timeline.images[0].url}}" style="width:300px;height:200px;"/>
+					{% endif %}
 	      		</div>
-	      		
 	      	</div>
 	      </div>
+		  {% endfor %}
 	      
       </div>
       
