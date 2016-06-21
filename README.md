@@ -8,6 +8,12 @@
 1352998 郭天宇
 1353000 刘嘉洋
 ***
+##源码说明
+/public/ js css 资源文件等
+/routes/ 路由
+/util/ 一些工具方法
+/views/ html文件
+/node_modules/ nodejs中间件
 ##项目概览
 服务端： nodejs + express + mongodb
 客户端： 安卓， ios

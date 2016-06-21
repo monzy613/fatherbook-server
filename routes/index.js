@@ -1,9 +1,10 @@
 var express = require("express")
 var router = express.Router()
 var swig = require("swig")
-var rongcloudSDK = require('rongcloud-sdk');
+var rongcloudSDK = require('rongcloud-sdk')
 var config = require("../util/config")
 var mongoose = require("mongoose")
+var session = require ('express-session')
 
 //db
 var db = require("../util/db")
@@ -22,6 +23,42 @@ var models = require("../models/user")
 
 router.get("/", function (req, res, next) {
     res.render('login')
+})
+
+router.post("/search.account", function (req, res, next) {
+    // /app.search.account by account
+    var account = req.session.myInfo.account
+    console.log(req.session.myInfo)
+    var searchString = req.body.searchString
+    if (searchString === undefined || searchString === "") {
+        res.send({
+            status: "410",
+            error: "想拿到所有用户? 没门!"
+        })
+        return
+    }
+    models.user_info.find({'_id': new RegExp(searchString, "i")}, function (err, docs) {
+        if (err) {
+            console.log("/app.search.account error: " + err)
+        } else {
+            for (var i = 0; i < docs.length; i += 1) {
+                if (docs[i]._id === account) {
+                    docs.splice(i, 1)
+                    break
+                }
+            }
+            if (docs.length === 0) {
+                res.send({
+                    status: "410"
+                })
+                return
+            }
+            res.render("search", {
+                users: docs,
+                myInfo: req.session.myInfo
+            })
+        }
+    })
 })
 
 router.post("/login", function (req, res, next) {
@@ -44,7 +81,6 @@ router.post("/login", function (req, res, next) {
                 res.send(status(210))
             } else {
                 // user find
-                console.log("user find")
                 var userInfo = {
                     "account": account
                 }
@@ -66,8 +102,10 @@ router.post("/login", function (req, res, next) {
                         var accounts = getIDArray(follow_infos)
                         accounts.push(account)
                         findTimelineByAccountArray(accounts, maxID, minID, count, function(timelines) {
+                            req.session.myInfo = docs[0]
+                            console.log("myInfo: " + req.session.myInfo)
                             res.render("index", {
-                                userInfo: docs[0],
+                                myInfo: docs[0],
                                 timelines: timelines
                             })
                         }, function() {

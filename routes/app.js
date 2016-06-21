@@ -123,6 +123,8 @@ router.post("/app.register", function (req, res, next) {
                 phone: req.body.phone,
                 email: req.body.email,
                 nickname: req.body.nickname === undefined ? req.body.account : req.body.nickname,
+                following: 0,
+                follower: 0,
                 isDefaultAvatar: true
             })
             userInfo.save(function (err, docs) {
@@ -363,6 +365,8 @@ router.post("/app.friend.unfollow", function(req, res, next) {
                 break
             }
         }
+        models.user_info.findOneAndUpdate({_id: account}, {$dec: {following: 1}}, function(err, docs) {})
+        models.user_info.findOneAndUpdate({_id: targetID}, {$dec: {follower: 1}}, function(err, docs) {})
         models.user_following.update({_id: account}, {$set: {follow_infos: follow_infos}}, function(err, docs){
             if (err) {
                 console.log("unfollow failed")
@@ -406,7 +410,8 @@ router.post("/app.friend.follow", function (req, res, next) {
                         }
                     }
                 }
-
+                models.user_info.findOneAndUpdate({_id: account}, {$inc: {following: 1}}, function(err, docs) {})
+                models.user_info.findOneAndUpdate({_id: targetID}, {$inc: {follower: 1}}, function(err, docs) {})
                 if (docs.length === 0) {
                     var follow_infos = []
                     follow_infos.push({

@@ -16,6 +16,8 @@ var user_info = new mongoose.Schema ({
     email: {type: String},
     nickname: {type: String},
     avatarURL: {type: String},
+    following: 0,
+    follower: 0,
     isDefaultAvatar: {type: Boolean}
 })
 

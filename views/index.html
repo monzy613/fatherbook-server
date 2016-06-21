@@ -3,7 +3,7 @@
   <head>
   	<link rel='icon' href='./images/logo.ico ' type=‘image/x-ico’ />
     <meta charset="utf-8">
-    <title>Facebook</title>
+    <title>SOA</title>
     <link href="./stylesheets/bootstrap.css" rel="stylesheet">
    <script src="./js/jquery.min.js"></script>
    <script src="./js/bootstrap.min.js"></script>
@@ -97,13 +97,13 @@
     <div class="topbar">
       <div class="fill">
         <div class="container">
-          <a class="brand" href="#">Facebook</a>
+          <a class="brand" href="#">SOA</a>
           <ul class="nav">
 			<div class="style_1">
 				<form method="post" id="searchform" action="/search.account">
 					<fieldset>
-						<input id="s" name="s" type="text" value="搜索用户" class="text_input" onblur="if(this.value==''){this.value='搜索用户';}" onfocus="if(this.value =='搜索用户') {this.value=''; }" />
-						<input type="HIDDEN" name="from" value={{myInfo.nickname}}/>
+						<input id="s" name="searchString" type="text" value="搜索用户" class="text_input" onblur="if(this.value==''){this.value='搜索用户';}" onfocus="if(this.value =='搜索用户') {this.value=''; }" />
+						<input type="HIDDEN" name="account" value="{{myInfo.account}}"/>
 						<input name="submit" type="submit" value="" /> </fieldset>
 				</form>
 			</div>
@@ -160,7 +160,7 @@
 		      	</div>
 		      </form>
 	      </div>
-		
+
 		  {% for timeline in timelines %}
 	      <div class="well">
 	      	<div class="row">
@@ -184,7 +184,8 @@
       	<div class="well" style="float:middle;">
 	      	<div class="row">
 	      	    <div class="span3" style="font-size:15px;line-height:30px;">
-		      	    {% if {{myInfo.isDefaultAvatar}} %}
+					{{myInfo.isDefaultAvatar}}
+		      	    {% if myInfo.isDefaultAvatar === true %}
 						<img src="./images/head.png" style="width:80px;height:80px;"/>
 	 				{% else %}
 		      			<img src="http://o7b20it1b.bkt.clouddn.com/{{myInfo.avatarURL}}" style="width:80px;height:80px;"/>

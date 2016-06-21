@@ -147,22 +147,23 @@
 			<h2>搜索结果</h2><hr>
 			{% for user in users %}
 				<div class="row" id="change">
-					<div class="span1">
-		      	    	{% if {{user.isDefaultAvatar}} %}
+					<div class="span2">
+		      	    	{% if user.isDefaultAvatar %}
 							<img src="./images/head.png" style="width:80px;height:80px;"/>
 	 					{% else %}
 		      				<img src="http://o7b20it1b.bkt.clouddn.com/{{user.avatarURL}}" style="width:80px;height:80px;"/>
 		      			{% endif %}
 					</div>
-					<div class="span7" style="word-wrap: break-word;word-break:break-all;">
+					<div class="span6" style="word-wrap: break-word;word-break:break-all;">
 						<h5><a href="#">{{user.nickname}}</a></h5>
-						<h6>关注数：1024&nbsp;&nbsp;粉丝数：1024&nbsp;&nbsp;内容数：1024</h6>
+						<h6>关注数：{{user.following}}&nbsp;&nbsp;粉丝数：{{user.follower}}</h6>
+						<h6>内容数：0</h6>
 					</div>
 					<div class="span2">
 						<a href="#" class="btn small">+关注</a>
 					</div>
 				</div>
-				<hr>';
+				<hr>
 			{% endfor %}
 			
 	      </div>
@@ -173,7 +174,7 @@
       	<div class="well" style="float:middle;">
 	      	<div class="row">
 	      	    <div class="span3" style="font-size:15px;line-height:30px;">
-		      	    {% if {{myInfo.isDefaultAvatar}} %}
+		      	    {% if myInfo.isDefaultAvatar %}
 						<img src="./images/head.png" style="width:80px;height:80px;"/>
 	 				{% else %}
 		      			<img src="http://o7b20it1b.bkt.clouddn.com/{{myInfo.avatarURL}}" style="width:80px;height:80px;"/>
