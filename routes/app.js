@@ -594,6 +594,7 @@ router.post("/app.timeline.post", function(req, res, next) {
                         repostCount: 0,
                         isRepost: false,
                         repostTimeline: undefined,
+                        commentCount: 0,
                         comments: undefined,
                         liked: undefined
                     })
