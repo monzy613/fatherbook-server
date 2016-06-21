@@ -538,14 +538,21 @@ router.post("/app.timeline.comment", function(req, res, next) {
 router.post("/app.timeline.post", function(req, res, next) {
     var account = req.body.account
     var password = req.body.password
+    var text = req.body.text
+    var imageJSONString = req.body.images
+    if (!text && !imageJSONString) {
+        res.send({
+            status: "610",
+            error: "empty timeline"
+        })
+        return
+    }
     models.user_info.find({_id: account}, function(err, docs) {
         if (err || docs.length === 0) {
             console.log(err)
             res.send(status(610))
         } else {
             //found
-            var text = req.body.text
-            var imageJSONString = req.body.images
             var images = []
             if (imageJSONString !== undefined) {
                 try {
