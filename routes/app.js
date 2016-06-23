@@ -696,16 +696,28 @@ router.post("/app.timeline.unlike", function(req, res, next) {
 })
 
 router.get("/app.timeline.getAll", function(req, res, next) {
-    models.user_timeline.find({}).sort({timeStamp: -1}).exec(function (err, docs) {
-        if (err) {
-            res.send(status(630))
-        } else {
-            res.send({
-                status: "620",
-                timelines: docs
-            })
-        }
+    var maxID = req.query.maxID
+    var minID = req.query.minID
+    var count = req.query.count
+    findTimelineByAccountArray(undefined, maxID, minID, count, function(timelines) {
+        res.send({
+            status: "620",
+            timelines: timelines
+        })
+    }, function() {
+        //failed
+        res.send(status(630))
     })
+    // models.user_timeline.find({}).sort({timeStamp: -1}).exec(function (err, docs) {
+    //     if (err) {
+    //         res.send(status(630))
+    //     } else {
+    //         res.send({
+    //             status: "620",
+    //             timelines: docs
+    //         })
+    //     }
+    // })
 })
 
 router.get("/app.timeline.get", function(req, res, next) {
@@ -861,6 +873,47 @@ function findTimelineByAccount(account, onSuccess, onFailed) {
 }
 
 function findTimelineByAccountArray(accounts, maxID, minID, count, onSuccess, onFailed) {
+    var firstQuery = {_id: {$in: accounts}}
+    if (accounts === undefined || accounts.length === 0) {
+        var size = validPageSize(count)
+        var query = {
+        }
+        if (maxID >= 0) {
+            query._id = {
+                $lt: parseInt(maxID)
+            }
+        }
+        if (minID >= 0) {
+            query._id = {
+                $gt: parseInt(minID)
+            }
+            models.user_timeline.find(query).sort({_id: -1}).exec(function (err, docs) {
+                if (err) {
+                    onFailed()
+                    return
+                }
+                if (docs.length === 0) {
+                    onSuccess([])
+                    return
+                }
+                onSuccess(docs)
+            })
+            return
+        }
+        models.user_timeline.find(query).sort({_id: -1}).limit(size).exec(function (err, docs) {
+            if (err) {
+                onFailed()
+                return
+            }
+            if (docs.length === 0) {
+                console.log(query)
+                onSuccess([])
+                return
+            }
+            onSuccess(docs)
+        })
+        return
+    }
     models.user_info.find({_id: {$in: accounts}}, function(findUserErr, userInfoDocs) {
         if (findUserErr || userInfoDocs.length === 0) {
             onFailed()
