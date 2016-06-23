@@ -540,6 +540,10 @@ router.post("/app.timeline.post", function(req, res, next) {
     var password = req.body.password
     var text = req.body.text
     var imageJSONString = req.body.images
+    var type = req.body.type
+    if (type === undefined) {
+        type = 0
+    }
     if (!text && !imageJSONString) {
         res.send({
             status: "610",
@@ -603,6 +607,7 @@ router.post("/app.timeline.post", function(req, res, next) {
                         repostTimeline: undefined,
                         commentCount: 0,
                         comments: undefined,
+                        type: type,
                         liked: undefined
                     })
                     timeline.save(function(saveErr, saveDocs) {
@@ -698,7 +703,7 @@ router.get("/app.timeline.get", function(req, res, next) {
             res.send(status(630))
             return
         }
-        models.user_timeline.find({account: account}, function(err, docs) {
+        models.user_timeline.find({account: account}).sort({timeStamp: -1}).exec(function (err, docs) {
             if (err) {
                 res.send(status(630))
                 return

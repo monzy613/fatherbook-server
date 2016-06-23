@@ -32,6 +32,7 @@ var user_timeline = new mongoose.Schema ({
     isRepost: {type: Boolean},
     repostTimeline: {type: {}},
     commentCount: 0,
+    type: 0,
     liked: {type: Array}
 })
 
