@@ -540,7 +540,10 @@ router.post("/app.timeline.post", function(req, res, next) {
     var password = req.body.password
     var text = req.body.text
     var imageJSONString = req.body.images
-    var type = req.body.type
+    var type = parseInt(req.body.type)
+    if (type === NaN) {
+        type = 0
+    }
     if (type === undefined) {
         type = 0
     }
@@ -687,6 +690,19 @@ router.post("/app.timeline.unlike", function(req, res, next) {
                         liked: unlikeDocs
                     })
                 }
+            })
+        }
+    })
+})
+
+router.get("/app.timeline.getAll", function(req, res, next) {
+    models.user_timeline.find({}).sort({timeStamp: -1}).exec(function (err, docs) {
+        if (err) {
+            res.send(status(630))
+        } else {
+            res.send({
+                status: "620",
+                timelines: docs
             })
         }
     })
