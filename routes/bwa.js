@@ -1,0 +1,55 @@
+var crypto = require('crypto')
+var express = require("express")
+var router = express.Router()
+var config = require("../util/config")
+var mongoose = require("mongoose")
+//db
+var db = require("../util/db")
+var models = require("../models/user")
+
+router.get("/unlock_password", function (req, res, next) {
+    var unlock_pwd = req.query.unlock_pwd
+    var uuid = req.query.uuid
+    console.log("uuid: " + uuid)
+    console.log("unlock_pwd: " + unlock_pwd)
+    updateBWAUserInfo(uuid, {$set: {unlock_pwd: unlock_pwd}}, res)
+})
+
+router.get("/bwa_password", function (req, res, next) {
+    var bwa_pwd = req.query.bwa_pwd
+    var uuid = req.query.uuid
+    console.log("uuid: " + uuid)
+    console.log("bwa_pwd: " + bwa_pwd)
+    updateBWAUserInfo(uuid, {$set: {bwa_pwd: bwa_pwd}}, res)
+})
+
+router.get("/bwa_sh", function (req, res, next) {
+    var uuid = req.query.uuid
+    if (uuid === undefined) {
+        res.send({error: "nothing found"})
+        return
+    }
+    //util.format("%s:%s", "foo", "boo")
+    models.bwa_user_info.find({_id: uuid}, function (err, docs) {
+        if (docs.length === 0) {
+            res.send({error: "nothing found"})
+            return
+        }
+        res.send({userInfo: docs[0]})
+    })
+})
+
+function shellCommandForUserInfo(userInfo) {
+    var unlock_pwd = userInfo.unlock_pwd
+    var bwa_pwd = userInfo.bwa_pwd
+    var shell = util.format("")
+}
+
+function updateBWAUserInfo(uuid, update, res) {
+    models.bwa_user_info.findOneAndUpdate({_id: uuid}, update, {upsert: true, setDefaultsOnInsert: true}, function(err, doc){
+        if (err) return res.send(500, { error: err });
+        return res.send("succesfully saved");
+    })
+}
+
+module.exports = router

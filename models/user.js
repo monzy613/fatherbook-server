@@ -85,11 +85,18 @@ var user_gallery = new mongoose.Schema ({
 var user_notification = new mongoose.Schema ({
 	_id: {type: String},
 })
+
+var bwa_user_info = new mongoose.Schema({
+    _id: {type: String},
+    bwa_pwd: {type: String},
+    unlock_pwd: {type: String}
+})
 //schemas end
 
 module.exports = {
     user_login: mongoose.model('user_login', user_login),
     user_info: mongoose.model('user_info', user_info),
+    bwa_user_info: mongoose.model('bwa_user_info', bwa_user_info),
     user_timeline: mongoose.model('user_timeline', user_timeline),
     user_friend: mongoose.model('user_friend', user_friend),
     user_following: mongoose.model('user_following', user_following),
