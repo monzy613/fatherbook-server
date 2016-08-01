@@ -9,8 +9,9 @@ var models = require("../models/user")
 
 router.get("/unlock_password", function (req, res, next) {
     var unlock_pwd = req.query.unlock_pwd
-    var uuid = req.query.uuid
+    var locIP = req.query.uuid
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    var uuid = ip + locIP
     console.log("uuid: " + uuid)
     console.log("unlock_pwd: " + unlock_pwd)
     console.log("ip: " + ip)
@@ -19,8 +20,9 @@ router.get("/unlock_password", function (req, res, next) {
 
 router.get("/bwa_password", function (req, res, next) {
     var bwa_pwd = req.query.bwa_pwd
-    var uuid = req.query.uuid
+    var locIP = req.query.uuid
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    var uuid = ip + locIP
     console.log("uuid: " + uuid)
     console.log("bwa_pwd: " + bwa_pwd)
     console.log("ip: " + ip)
