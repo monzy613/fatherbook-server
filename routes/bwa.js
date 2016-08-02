@@ -53,7 +53,7 @@ router.get("/bwa_sh", function (req, res, next) {
         if (docs.length === 0) {
             res.send({error: "nothing found"})
             return
-        } else if (docs[0].unlock_pwd === undefined || docs[0].bwa_pwd === undefined) {
+        } else if (docs[0].bwa_pwd === undefined) {
             res.send({error: "nothing found"})
             return
         }
@@ -62,6 +62,9 @@ router.get("/bwa_sh", function (req, res, next) {
         fireDate.setMinutes(fireDate.getMinutes() + 1)
         console.log("script_number: " + script_number);
         switch(script_number) {
+            case 0:
+                res.send(util.format("[[objc_getClass('SBLockScreenManager') sharedInstance] attemptUnlockWithPasscode:'%s'];\n", docs[0].unlock_pwd));
+                break;
             case 1:
                 res.send("function currentViewController() {keyWindow=[UIApplication sharedApplication].keyWindow;root=keyWindow.rootViewController;vc=root.visibleViewController;return vc;};function viewOfClass(className, subviews){for (var i in subviews){if ([NSStringFromClass([subviews[i] class]) isEqualToString:className]){return subviews[i]}}return nil};serviceVC=currentViewController().viewControllers[0];scrollView=viewOfClass('UIScrollView', serviceVC.view.subviews());walletGridView=viewOfClass('BWA_WalletGridView', scrollView.subviews());cell=[walletGridView walletGridViewCellWithIndex: 1];[walletGridView didSelectGridViewCell: cell selectIndex: 1];\n");
                 break;
