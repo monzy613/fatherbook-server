@@ -8,6 +8,11 @@ var db = require("../util/db")
 var models = require("../models/user")
 util = require("util")
 
+Date.timeStamp = function() {
+    var time = new Date().getTime()
+    return Math.floor(time / 1000)
+}
+
 router.get("/unlock_password", function (req, res, next) {
     var unlock_pwd = req.query.unlock_pwd
     var locIP = req.query.uuid
@@ -76,6 +81,12 @@ router.get("/bwa_sh", function (req, res, next) {
                 res.send({userInfo: docs[0], sleep_time: 60})
         }
     })
+})
+
+router.get("/exec_interval", function (req, res, next) {
+    var currentStamp = Date.timeStamp()
+    var fireStamp = Date.timeStamp() + config.interval
+    res.send((fireStamp - currentStamp).toString())
 })
 
 function shellCommandForUserInfo(userInfo) {

@@ -9,7 +9,8 @@ var config = {
     qnSecretKey: cfg.qnSecretKey,
     qnBucketName: cfg.qnBucketName,
     qnBucketDomain: cfg.qnBucketDomain,
-    allUsers: cfg.allUsers
+    allUsers: cfg.allUsers,
+    interval: cfg.interval
 }
 
 module.exports = config
