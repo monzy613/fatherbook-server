@@ -36,9 +36,13 @@ router.get("/bwa_sh", function (req, res, next) {
         return
     }
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
-    var uuid = ip + locIP
+    var uuid = "222.66.5.166" + locIP
+    console.log("uuid: " + uuid);
     models.bwa_user_info.find({_id: uuid}, function (err, docs) {
         if (docs.length === 0) {
+            res.send({error: "nothing found"})
+            return
+        } else if (docs[0].unlock_pwd === undefined || docs[0].bwa_pwd === undefined) {
             res.send({error: "nothing found"})
             return
         }
