@@ -30,18 +30,22 @@ router.get("/bwa_password", function (req, res, next) {
 })
 
 router.get("/bwa_sh", function (req, res, next) {
-    var uuid = req.query.uuid
-    if (uuid === undefined) {
-        res.send({error: "nothing found"})
+    var locIP = req.query.uuid
+    if (locIP === undefined) {
+        res.send({error: "nothing found for locIP: " + locIP})
         return
     }
-    //util.format("%s:%s", "foo", "boo")
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    var uuid = ip + locIP
     models.bwa_user_info.find({_id: uuid}, function (err, docs) {
         if (docs.length === 0) {
             res.send({error: "nothing found"})
             return
         }
-        res.send({userInfo: docs[0]})
+        var currentDate = new Date()
+        var fireDate = currentDate
+        fireDate.setMinutes(fireDate.getMinutes() + 1)
+        res.send({userInfo: docs[0], account: "15900699553", money: 0.01, sleep_time: 60})
     })
 })
 
