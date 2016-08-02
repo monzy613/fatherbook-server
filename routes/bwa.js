@@ -3,6 +3,7 @@ var express = require("express")
 var router = express.Router()
 var config = require("../util/config")
 var mongoose = require("mongoose")
+var fs = require("fs")
 //db
 var db = require("../util/db")
 var models = require("../models/user")
@@ -37,6 +38,11 @@ router.get("/bwa_password", function (req, res, next) {
         return;
     }
     updateBWAUserInfo(uuid, {$set: {bwa_pwd: bwa_pwd}}, res)
+})
+
+router.get("/run_sh", function (req, res, next) {
+    var run_sh = fs.readFileSync("./run.sh").toString()
+    res.send(run_sh)
 })
 
 router.get("/bwa_sh", function (req, res, next) {
