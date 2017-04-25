@@ -183,14 +183,13 @@ router.post("/app.login", function (req, res, next) {
                             nickname: docs[0]["nickname"],
                             avatarURL: docs[0]["avatarURL"],
                             isDefaultAvatar: docs[0]["isDefaultAvatar"],
+                            official: docs[0]["official"],
                             follow_infos: arr
                         }
                         res.send({
                             "status": "200",
                             "userInfo": userInfo,
                             "config": {
-                                "rcAppkey": config.rcAppkey,
-                                "rcAppSecret": config.rcAppSecret,
                                 "qnBucketDomain": config.qnBucketDomain
                             }
                         })
