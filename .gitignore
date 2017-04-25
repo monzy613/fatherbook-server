@@ -3,3 +3,5 @@ config.json
 .idea
 run.sh
 test
+
+npm-debug.log

@@ -125,7 +125,8 @@ router.post("/app.register", function (req, res, next) {
                 nickname: req.body.nickname === undefined ? req.body.account : req.body.nickname,
                 following: 0,
                 follower: 0,
-                isDefaultAvatar: true
+                isDefaultAvatar: true,
+                official: false,
             })
             userInfo.save(function (err, docs) {
                 if (err) {

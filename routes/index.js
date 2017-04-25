@@ -162,7 +162,8 @@ router.post("/register", function (req, res, next) {
                 phone: req.body.phone,
                 email: req.body.email,
                 nickname: req.body.nickname === undefined ? req.body.account : req.body.nickname,
-                isDefaultAvatar: true
+                isDefaultAvatar: true,
+                official: false,
             })
             userInfo.save(function (err, docs) {
                 if (err) {
