@@ -5,6 +5,7 @@ var swig = require("swig")
 var rongcloudSDK = require('rongcloud-sdk');
 var config = require("../util/config")
 var mongoose = require("mongoose")
+var isEmpty = require("lodash/isEmpty")
 
 //db
 var db = require("../util/db")
@@ -556,7 +557,7 @@ router.post("/app.timeline.post", function(req, res, next) {
     }
     models.user_info.find({_id: account}, function(err, docs) {
         if (err || docs.length === 0) {
-            console.log(err)
+            console.log('user_info not found')
             res.send(status(610))
         } else {
             //found
@@ -573,13 +574,12 @@ router.post("/app.timeline.post", function(req, res, next) {
                 }
             }
             var timeStamp = Date.timeStamp()
-            models.counter.findOneAndUpdate({_id: models.trackInfo.timeline}, {$inc: {maxID: 1}}, function(maxIDErr, maxIDDocs) {
-                if (maxIDErr || maxIDDocs === undefined) {
+            models.counter.findOneAndUpdate({_id: models.trackInfo.timeline}, {$inc: {maxID: 1}}, { upsert: true, setDefaultsOnInsert: true },  function(maxIDErr, maxIDDocs) {
+                if (maxIDErr) {
                     console.log(err)
                     res.send(status(610))
                 } else {
-                    console.log(maxIDDocs)
-                    var newID = maxIDDocs.maxID + 1
+                    var newID = isEmpty(maxIDDocs) ? 1 : (maxIDDocs.maxID + 1)
                     var successJSON = {
                         success: "600",
                         _id: newID
