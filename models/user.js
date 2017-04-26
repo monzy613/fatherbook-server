@@ -34,7 +34,8 @@ var user_timeline = new mongoose.Schema ({
     repostTimeline: {type: {}},
     commentCount: 0,
     type: 0,
-    liked: {type: Array}
+    liked: {type: Array},
+    attendList: { type: Array },
 })
 
 var user_comment = new mongoose.Schema ({

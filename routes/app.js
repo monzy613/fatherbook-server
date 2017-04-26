@@ -627,6 +627,72 @@ router.post("/app.timeline.post", function(req, res, next) {
     })
 })
 
+router.post("/app.timeline.attend", function(req, res, next) {
+    var account = req.body.account
+    var timelineID = parseInt(req.body.timelineID)
+    models.user_info.find({_id: account}, function(userInfoError, userInfoDocs) {
+        if (userInfoError || userInfoDocs.length === 0) {
+            res.send({
+                status: "635",
+                error: userInfoError
+            })
+        } else {
+            models.user_timeline.find({_id: timelineID}, function (timelineError, timelineDocs) {
+                if (timelineError || timelineDocs.length === 0) {
+                    res.send({
+                        status: "650",
+                        error: timelineError
+                    })
+                } else {
+                    var attendList = timelineDocs[0].attendList
+                    attend(userInfoDocs[0], attendList)
+                    models.user_timeline.update({_id: timelineID}, {$set: {attendList: attendList}}, function (likeError, likeDocs) {
+                        if (likeError) {
+                            res.send({
+                                status: "650",
+                                error: likeError
+                            });
+                        } else {
+                            res.send({
+                                status: "640",
+                                liked: likeDocs
+                            })
+                        }
+                    })
+                }
+            })
+        }
+    })
+})
+
+router.post("/app.timeline.cancelattend", function(req, res, next) {
+    var account = req.body.account
+    var timelineID = parseInt(req.body.timelineID)
+    models.user_timeline.find({_id: timelineID}, function(timelineError, timelineDocs) {
+        if (timelineError || timelineDocs.length === 0) {
+            res.send({
+                "status": "670",
+                "error": unlikeError
+            })
+        } else {
+            var attendList = cancelattend(account, timelineDocs[0].attendList)
+            models.user_timeline.update({_id: timelineID}, {$set: {attendList: attendList}}, function (unlikeError, unlikeDocs) {
+                if (unlikeError) {
+                    res.send({
+                        "status": "670",
+                        "error": unlikeError
+                    })
+                } else {
+                    res.send({
+                        status: "660",
+                        liked: unlikeDocs
+                    })
+                }
+            })
+        }
+    })
+})
+
 router.post("/app.timeline.like", function(req, res, next) {
     var account = req.body.account
     var timelineID = parseInt(req.body.timelineID)
@@ -1032,6 +1098,31 @@ function unlike(account, likeArray) {
         }
     }
     return likeArray
+}
+
+function attend(userInfo, attendList) {
+    var inserted = false
+    for (var i = 0; i < attendList.length; i += 1) {
+        if (userInfo._id === attendList[i]._id) {
+            attendList[i] = userInfo;
+            inserted = true
+            break
+        }
+    }
+    if (!inserted) {
+        attendList.push(userInfo)
+    }
+    return attendList
+}
+
+function cancelattend(account, attendList) {
+    for (var i = 0; i < attendList.length; i += 1) {
+        if (account === attendList[i]._id) {
+            attendList.splice(i, 1)
+            break
+        }
+    }
+    return attendList
 }
 
 function imageURL(timelineID, index) {
